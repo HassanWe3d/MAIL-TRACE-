@@ -1,0 +1,29 @@
+From: security@paypa1-verify.com
+To: victim@example.com
+Subject: Urgent: Your Account Has Been Compromised!
+Date: Mon, 25 Aug 2025 10:30:00 -0000
+Reply-To: security-team@paypa1-verify.com
+Return-Path: <bounces@malicious-server.net>
+Message-ID: <test-phishing-001@example.com>
+Received: from mail.malicious-server.net [192.168.1.100]
+        by mx.example.com (8.14.4/8.14.4) with ESMTP id r7PK3u0201234
+        for <victim@example.com>; Mon, 25 Aug 2025 10:29:55 GMT
+Received: from unknown (HELO phishing-relay) (10.0.0.1)
+        by mail.malicious-server.net with ESMTP; Mon, 25 Aug 2025 10:29:50 GMT
+Authentication-Results: mx.example.com;
+        spf=fail (domain of paypa1-verify.com does not designate 192.168.1.100 as permitted sender)
+Received-SPF: fail (mx.example.com: domain of paypa1-verify.com does not designate 192.168.1.100 as permitted sender)
+DKIM-Signature: v=1; a=rsa-sha256; d=paypa1-verify.com; s=default;
+MIME-Version: 1.0
+Content-Type: text/html; charset="UTF-8"
+
+<html>
+<body>
+<h1>Your PayPal Account Has Been Suspended!</h1>
+<p>We detected unauthorized activity on your account.</p>
+<p>Please verify your identity immediately or your account will be permanently closed.</p>
+<a href="https://paypa1-verify.com/secure/login">Click Here to Verify Your Account</a>
+<p>If you do not respond within 24 hours, your account will be permanently suspended.</p>
+<p>PayPal Security Team</p>
+</body>
+</html>

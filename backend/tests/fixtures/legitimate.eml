@@ -1,0 +1,22 @@
+From: newsletter@techcompany.com
+To: subscriber@example.com
+Subject: Weekly Tech Newsletter - August 2025
+Date: Fri, 22 Aug 2025 09:00:00 +0000
+Message-ID: <test-legit-001@techcompany.com>
+Received: from mail.techcompany.com (mail.techcompany.com [203.0.113.50])
+        by mx.example.com (8.14.4/8.14.4) with ESMTP id r7PM1a0012345
+        for <subscriber@example.com>; Fri, 22 Aug 2025 08:59:55 GMT
+Authentication-Results: mx.example.com;
+        spf=pass (domain of techcompany.com designates 203.0.113.50 as permitted sender);
+        dkim=pass header.i=@techcompany.com;
+        dmarc=pass (p=NONE) header.from=techcompany.com
+DKIM-Signature: v=1; a=rsa-sha256; d=techcompany.com; s=selector1;
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+
+Hello,
+
+Here is our weekly tech newsletter with the latest updates.
+
+Best regards,
+The Tech Company Team

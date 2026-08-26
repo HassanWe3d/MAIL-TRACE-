@@ -1,0 +1,29 @@
+From: ceo@legitimate-bank.com
+To: finance@company.com
+Subject: Wire Transfer Required - Urgent
+Date: Thu, 21 Aug 2025 14:00:00 +0000
+Reply-To: ceo-personal@gmail.com
+Return-Path: <reply@random-vps-server.org>
+Message-ID: <test-spoof-001@company.com>
+Received: from random-vps-server.org [45.33.32.156]
+        by mx.company.com with ESMTP; Thu, 21 Aug 2025 13:59:50 GMT
+Authentication-Results: mx.company.com;
+        spf=softfail (domain of legitimate-bank.com does not designate 45.33.32.156 as permitted sender);
+        dkim=fail;
+        dmarc=fail (policy=reject)
+Received-SPF: softfail (domain of legitimate-bank.com does not designate 45.33.32.156 as permitted sender)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+
+Hi,
+
+I need you to process an urgent wire transfer. Please send $50,000 to the following account:
+
+Bank: International Banking Corp
+Account: 1234567890
+Routing: 021000021
+
+This is time sensitive. Please handle today.
+
+Thanks,
+CEO
