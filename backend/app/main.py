@@ -8,6 +8,7 @@ from app.db.database import init_db, close_db
 from app.api.routes.investigations import router as investigations_router
 from app.api.routes.graph import router as graph_router
 from app.api.routes.reports import router as reports_router
+from app.api.routes.health import router as health_router
 
 settings = get_settings()
 
@@ -40,6 +41,7 @@ app.add_middleware(
 app.include_router(investigations_router)
 app.include_router(graph_router)
 app.include_router(reports_router)
+app.include_router(health_router)
 
 
 @app.get("/api/health")
