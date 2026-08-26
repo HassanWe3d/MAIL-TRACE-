@@ -52,7 +52,12 @@ def generate_report(data):
     if iocs:
         id = [["Type", "Value", "Source", "Risk"]]
         for i in iocs[:50]:
-            id.append([i.get("ioc_type", ""), str(i.get("value", ""))[:60], i.get("source", ""), i.get("risk", "")])
+            if isinstance(i, dict):
+                id.append([i.get("ioc_type", ""), str(i.get("value", ""))[:60], i.get("source", ""), i.get("risk", "")])
+            elif isinstance(i, str):
+                id.append(["", str(i)[:60], "", ""])
+            else:
+                id.append(["", str(i)[:60], "", ""])
         t = Table(id, colWidths=[1*inch, 3*inch, 1.2*inch, 1*inch])
         t.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), hc), ("TEXTCOLOR", (0,0), (-1,0), wc), ("FONTSIZE", (0,0), (-1,-1), 8), ("GRID", (0,0), (-1,-1), 0.5, gc)]))
         story.append(t)
@@ -62,7 +67,12 @@ def generate_report(data):
     if risk:
         story.append(Paragraph(f"Final: {risk.get('final_score', 0)} ({risk.get('risk_level', '')}) | Deterministic: {risk.get('deterministic_score', 0)} | AI SE: +{risk.get('ai_social_engineering_score', 0)}", bs))
         for sig in (risk.get("signals") or []):
-            story.append(Paragraph(f"  - {sig.get('name', '')}: +{sig.get('weight', 0)}", ss))
+            if isinstance(sig, dict):
+                story.append(Paragraph(f"  - {sig.get('name', '')}: +{sig.get('weight', 0)}", ss))
+            elif isinstance(sig, str):
+                story.append(Paragraph(f"  - {sig}", ss))
+            elif sig is not None:
+                story.append(Paragraph(f"  - {sig}", ss))
 
     story.append(Paragraph("6. AI Assessment", hs))
     ai = data.get("ai_analysis", {})
@@ -72,9 +82,27 @@ def generate_report(data):
         if ai.get("summary"):
             story.append(Paragraph(f"Summary: {ai['summary']}", bs))
         for r in (ai.get("reasoning") or []):
-            story.append(Paragraph(f"  - {r.get('evidence', '')}: {r.get('impact', '')}", ss))
+            if isinstance(r, dict):
+                ev = r.get('evidence', '') or ''
+                imp = r.get('impact', '') or ''
+                text = f"{ev}: {imp}" if imp else str(ev)
+            elif isinstance(r, str):
+                text = r
+            elif r is None:
+                continue
+            else:
+                text = str(r)
+            if text.strip():
+                story.append(Paragraph(f"  - {text}", ss))
         for rec in (ai.get("recommended_actions") or []):
-            story.append(Paragraph(f"  - {rec}", ss))
+            if isinstance(rec, str) and rec.strip():
+                story.append(Paragraph(f"  - {rec}", ss))
+            elif isinstance(rec, dict):
+                action_text = rec.get('action', '') or rec.get('description', '') or str(rec)
+                if action_text.strip():
+                    story.append(Paragraph(f"  - {action_text}", ss))
+            elif rec is not None:
+                story.append(Paragraph(f"  - {rec}", ss))
 
     story.append(Paragraph("7. Limitations", hs))
     story.append(Paragraph("IP geolocation is approximate. Attachments were not executed. URLs were not visited.", bs))
