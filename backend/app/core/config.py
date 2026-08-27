@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
     AI_PROVIDER: str = "gemini"
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,https://mail-trace.vercel.app"
     VT_RATE_LIMIT_PER_MINUTE: int = 4
     VT_CONCURRENT_REQUESTS: int = 2
     IP_API_CONCURRENT_REQUESTS: int = 5
