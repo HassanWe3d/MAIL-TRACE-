@@ -12,7 +12,7 @@ from app.services.domain_analyzer import analyze_domain
 from app.services.risk_engine import calculate_signals, calculate_score, apply_ai_social_engineering
 from app.integrations.ip_api import geolocate_ip
 from app.integrations.virustotal import check_url, check_domain, check_hash
-from app.integrations.gemini import classify_with_claude
+from app.integrations.ai_provider import classify_with_claude
 from app.services.enrichment_cache import get_cached, set_cached
 
 # Private/reserved IP ranges — skip geolocation for these
