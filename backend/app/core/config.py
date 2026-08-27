@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     AI_MODEL: str = "gemini-3.6-flash"
     OPENAI_MODEL: str = "gpt-4o-mini"
     DEEPSEEK_MODEL: str = "deepseek-chat"
-    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+    GROQ_MODEL: str = "openai/gpt-oss-20b"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

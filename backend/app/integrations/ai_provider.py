@@ -46,7 +46,12 @@ def _is_transient(exc: Exception) -> bool:
     if isinstance(exc, httpx.HTTPStatusError):
         return exc.response.status_code in _TRANSIENT_STATUS_CODES
     msg = str(exc).lower()
-    return any(term in msg for term in ("timeout", "connection", "429", "500", "502", "503", "504"))
+    if any(term in msg for term in ("timeout", "connection", "429", "500", "502", "503", "504")):
+        return True
+    # 404 model-not-found on deprecated/removed models — treat as transient so fallback continues
+    if "404" in msg and "model" in msg:
+        return True
+    return False
 
 
 # ── Shared prompt ───────────────────────────────────────────────────────
