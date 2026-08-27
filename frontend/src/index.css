@@ -10,3 +10,19 @@ body { margin:0; background:#000; color:#E0E0E0; font-family:system-ui,-apple-sy
 ::selection { background:rgba(255,255,255,0.15); color:#FFF; }
 a { color:inherit; text-decoration:none; }
 button { font-family:inherit; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+}
+.show-mobile { display: none !important; }
+@media (max-width: 768px) {
+  .show-mobile { display: flex !important; }
+}
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+@media (max-width: 640px) {
+  .stats-grid { grid-template-columns: 1fr !important; }
+  .detail-grid { grid-template-columns: 1fr !important; }
+}

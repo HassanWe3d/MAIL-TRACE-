@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listInvestigations } from '../api';
+import { listInvestigations, ApiError } from '../api';
 import { T, riskColor, card } from '../theme';
 import AppShell from '../components/AppShell';
 
@@ -28,7 +28,7 @@ export default function Dashboard() {
       setItems(d.items || []);
       setTotal(d.total || 0);
     } catch (e) {
-      setError(e.message?.includes('fetch') ? 'Backend unavailable' : e.message);
+      setError(e instanceof ApiError ? e.message : (e.message?.includes('fetch') ? 'Backend unavailable. Check your connection and try again.' : e.message));
     } finally { setLoading(false); }
   }, []);
 
@@ -51,7 +51,7 @@ export default function Dashboard() {
 
       <main style={{ padding: '20px 24px', flex: 1 }}>
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 20 }}>
+        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 20 }}>
           {[{ l: 'TOTAL', v: s.total, c: T.white }, { l: 'CRITICAL', v: s.critical, c: T.danger }, { l: 'HIGH', v: s.high, c: T.warning }, { l: 'PROCESSING', v: s.processing, c: T.textDim }].map(x => (
             <div key={x.l} style={{ ...card, padding: '12px 14px' }}>
               <div style={{ fontSize: '0.55rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 3 }}>{x.l}</div>
@@ -68,11 +68,16 @@ export default function Dashboard() {
           </div>
 
           {loading ? (
-            <div style={{ padding: 40, textAlign: 'center', color: T.textDim, fontSize: '0.75rem' }}>Loading...</div>
+            <div style={{ padding: 40, textAlign: 'center', color: T.textDim, fontSize: '0.75rem' }}>
+              <div style={{ width: 18, height: 18, border: `2px solid ${T.border}`, borderTopColor: T.white, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 8px' }} />
+              Loading investigations...
+            </div>
           ) : error ? (
             <div style={{ padding: 28, textAlign: 'center' }}>
-              <p style={{ color: T.textMuted, fontSize: '0.78rem', marginBottom: 8 }}>{error}</p>
-              <button onClick={load} style={{ padding: '5px 12px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: '0.68rem' }}>Retry</button>
+              <p style={{ color: T.textMuted, fontSize: '0.78rem', marginBottom: 10 }}>{error}</p>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                <button onClick={load} style={{ padding: '5px 14px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: '0.68rem', fontWeight: 600 }}>Retry</button>
+              </div>
             </div>
           ) : items.length === 0 ? (
             <div style={{ padding: 40, textAlign: 'center' }}>

@@ -1,5 +1,6 @@
 """Central investigation pipeline orchestrator — optimized."""
 import uuid, asyncio, time
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.logging_config import logger
 from app.db.models import Investigation, EmailMetadata, EmailHeader, ReceivedHop, AuthenticationResult, IOC as IOCModel, IPEnrichment, ThreatIntelResult, Attachment, AIAnalysis, RiskScoreDetail
@@ -34,13 +35,24 @@ def _is_private_ip(ip: str) -> bool:
     return False
 
 
-async def run_investigation(db, eml_bytes, filename):
-    inv_id = uuid.uuid4()
+async def run_investigation(db, eml_bytes, filename, inv_id=None):
+    inv_id = inv_id or uuid.uuid4()
     t_start = time.perf_counter()
     logger.info("[PERF] Starting investigation %s for %s", inv_id, filename)
-    inv = Investigation(id=inv_id, filename=filename, status="processing", file_size=len(eml_bytes))
-    db.add(inv)
-    await db.flush()
+
+    # If inv_id was provided, the investigation was already created by the upload endpoint.
+    # Fetch it; otherwise create a new one.
+    if inv_id is not None:
+        result = await db.execute(select(Investigation).where(Investigation.id == inv_id))
+        inv = result.scalar_one_or_none()
+        if inv is None:
+            inv = Investigation(id=inv_id, filename=filename, status="processing", file_size=len(eml_bytes))
+            db.add(inv)
+            await db.flush()
+    else:
+        inv = Investigation(id=inv_id, filename=filename, status="processing", file_size=len(eml_bytes))
+        db.add(inv)
+        await db.flush()
     try:
         # ── Phase 1: Local analysis (fast, synchronous) ──
         t0 = time.perf_counter()

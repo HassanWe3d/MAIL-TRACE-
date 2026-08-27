@@ -13,7 +13,7 @@ export default function AppShell({ children }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: T.bg, color: T.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       {/* Sidebar */}
-      <aside style={{
+      <aside className="hide-mobile" style={{
         width: T.sidebarWidth, position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100,
         background: T.bgAlt, borderRight: `1px solid ${T.border}`,
         display: 'flex', flexDirection: 'column',
@@ -27,7 +27,9 @@ export default function AppShell({ children }) {
         {/* Nav */}
         <nav style={{ flex: 1, padding: '10px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
           {nav.map(item => {
-            const active = location.pathname === item.to || (item.to !== '/dashboard' && location.pathname.startsWith(item.to));
+            const active = item.to === '/dashboard'
+              ? location.pathname === '/dashboard'
+              : location.pathname.startsWith(item.to);
             return (
               <NavLink
                 key={item.to}
@@ -53,7 +55,11 @@ export default function AppShell({ children }) {
         </div>
       </aside>
 
-      <div style={{ flex: 1, marginLeft: T.sidebarWidth, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="hide-mobile" style={{ flex: 1, marginLeft: T.sidebarWidth, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        {children}
+      </div>
+      {/* Mobile layout — no sidebar */}
+      <div className="show-mobile" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {children}
       </div>
     </div>

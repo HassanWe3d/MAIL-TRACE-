@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4o-mini"
     DEEPSEEK_MODEL: str = "deepseek-chat"
     GROQ_MODEL: str = "openai/gpt-oss-20b"
+    MAX_UPLOAD_SIZE_MB: int = 25
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 
@@ -33,6 +34,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.APP_ENV == "production"
+
+    @property
+    def max_upload_bytes(self) -> int:
+        return self.MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
 
 @lru_cache

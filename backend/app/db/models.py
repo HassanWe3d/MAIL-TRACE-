@@ -32,6 +32,7 @@ class Investigation(Base):
     classification = Column(String(50))
     ai_confidence = Column(Float)
     file_size = Column(Integer)
+    error_message = Column(Text)
 
     email_metadata = relationship("EmailMetadata", back_populates="investigation", uselist=False, cascade="all, delete-orphan")
     headers = relationship("EmailHeader", back_populates="investigation", cascade="all, delete-orphan")

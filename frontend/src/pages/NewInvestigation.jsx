@@ -1,8 +1,10 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { uploadEml } from '../api';
+import { uploadEml, ApiError } from '../api';
 import { T, card, sectionHead } from '../theme';
 import AppShell from '../components/AppShell';
+
+const MAX_FILE_MB = 25;
 
 export default function NewInvestigation() {
   const navigate = useNavigate();
@@ -14,23 +16,34 @@ export default function NewInvestigation() {
 
   const handleFile = async (file) => {
     if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.eml')) { setError('Only .eml files accepted'); setPhase('error'); return; }
+    if (!file.name.toLowerCase().endsWith('.eml')) { setError('Only .eml files are accepted.'); setPhase('error'); return; }
+    if (file.size > MAX_FILE_MB * 1024 * 1024) {
+      setError(`File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum supported size is ${MAX_FILE_MB} MB.`);
+      setPhase('error');
+      return;
+    }
+    if (file.size === 0) { setError('File is empty.'); setPhase('error'); return; }
     setFileName(file.name); setFileSize(file.size); setPhase('uploading'); setError('');
     try {
       const res = await uploadEml(file);
       const id = res.data?.id;
       if (!id) throw new Error('No investigation ID returned');
-      setPhase('processing');
-      setTimeout(() => { setPhase('success'); setTimeout(() => navigate(`/investigations/${id}`), 400); }, 600);
+      // Navigate directly to the investigation detail page
+      // The detail page will show a processing banner and poll for completion
+      navigate(`/investigations/${id}`);
     } catch (e) {
-      setError(e.message?.includes('fetch') ? 'Backend unavailable' : e.message);
+      if (e instanceof ApiError) {
+        setError(e.message);
+      } else {
+        setError(e.message || 'An unexpected error occurred.');
+      }
       setPhase('error');
     }
   };
 
-  const onDrop = (e) => { e.preventDefault(); setPhase('idle'); handleFile(e.dataTransfer.files[0]); };
-  const isActive = phase === 'uploading' || phase === 'processing' || phase === 'success';
-  const bc = phase === 'hover' ? '#555' : phase === 'error' ? '#888' : phase === 'success' ? '#AAA' : T.border;
+  const onDrop = (e) => { e.preventDefault(); if (phase !== 'idle' && phase !== 'error') return; handleFile(e.dataTransfer.files[0]); };
+  const isActive = phase === 'uploading';
+  const bc = phase === 'hover' ? '#555' : phase === 'error' ? '#F87171' : phase === 'success' ? '#AAA' : T.border;
 
   return (
     <AppShell>
@@ -54,25 +67,25 @@ export default function NewInvestigation() {
             onClick={() => !isActive && inputRef.current?.click()}
             style={{ ...card, padding: '44px 20px', textAlign: 'center', cursor: isActive ? 'default' : 'pointer', borderColor: bc, background: phase === 'hover' ? '#0A0A0A' : T.surface, transition: 'all 0.2s' }}
           >
-            <input ref={inputRef} type="file" accept=".eml" style={{ display: 'none' }} onChange={e => { handleFile(e.target.files[0]); e.target.value = ''; }} />
+            <input ref={inputRef} type="file" accept=".eml" style={{ display: 'none' }} onChange={e => { if (e.target.files[0]) handleFile(e.target.files[0]); e.target.value = ''; }} />
 
-            {(phase === 'idle' || phase === 'hover' || phase === 'error') ? (
+            {phase === 'uploading' ? (
               <>
-                <div style={{ width: 44, height: 44, borderRadius: 8, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: T.textDim, fontSize: '1.1rem' }}>↑</div>
-                <p style={{ fontSize: '0.82rem', color: T.white, marginBottom: 3 }}>Drop your <strong>.eml</strong> file here</p>
-                <p style={{ fontSize: '0.65rem', color: T.textFaint }}>or click to browse</p>
+                <div style={{ width: 44, height: 44, borderRadius: 8, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: T.textDim }}>
+                  <div style={{ width: 16, height: 16, border: `2px solid ${T.border}`, borderTopColor: T.white, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                </div>
+                <p style={{ fontSize: '0.82rem', color: T.white, fontWeight: 500 }}>Uploading...</p>
+                <p style={{ fontSize: '0.65rem', color: T.textFaint, marginTop: 4, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fileName}</p>
+                {fileSize > 0 && <p style={{ fontSize: '0.6rem', color: T.textFaint, marginTop: 2 }}>{(fileSize / 1024).toFixed(1)} KB</p>}
               </>
             ) : (
               <>
-                <div style={{ width: 44, height: 44, borderRadius: 8, border: `1px solid ${phase === 'success' ? '#AAA' : T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: phase === 'success' ? T.white : T.textDim, fontSize: '1.1rem' }}>
-                  {phase === 'success' ? '✓' : '⟳'}
+                <div style={{ width: 44, height: 44, borderRadius: 8, border: `1px solid ${phase === 'error' ? `${T.danger}40` : T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', color: phase === 'error' ? T.danger : T.textDim, fontSize: '1.1rem' }}>
+                  {phase === 'error' ? '✕' : '↑'}
                 </div>
-                <p style={{ fontSize: '0.82rem', color: T.white, fontWeight: 500 }}>
-                  {phase === 'uploading' && `Uploading ${fileName}...`}
-                  {phase === 'processing' && `Analyzing ${fileName}...`}
-                  {phase === 'success' && 'Redirecting to results...'}
-                </p>
-                <p style={{ fontSize: '0.65rem', color: T.textFaint, marginTop: 5 }}>{(fileSize / 1024).toFixed(1)} KB</p>
+                <p style={{ fontSize: '0.82rem', color: T.white, marginBottom: 3 }}>Drop your <strong>.eml</strong> file here</p>
+                <p style={{ fontSize: '0.65rem', color: T.textFaint }}>or click to browse</p>
+                <p style={{ fontSize: '0.55rem', color: T.textDark, marginTop: 6 }}>Max {MAX_FILE_MB} MB</p>
               </>
             )}
           </div>

@@ -25,17 +25,20 @@ function Node({ data }) {
 
 const nodeTypes = { custom: Node };
 
-export default function InvestigationGraph({ graph }) {
+export default function InvestigationGraph({ graph, loading, error, onRetry }) {
   const { nodes, edges } = useMemo(() => {
     if (!graph) return { nodes: [], edges: [] };
     return {
-      nodes: (graph.nodes || []).map((n, i) => ({
+      nodes: (graph.nodes || []).filter(n => n?.id).map((n, i) => ({
         id: n.id, type: 'custom',
         position: { x: (i % 4) * 190, y: Math.floor(i / 4) * 100 },
-        data: { label: n.label, nodeType: n.type, risk: n.risk },
+        data: { label: n.label || 'Unknown', nodeType: n.type || 'unknown', risk: n.risk || 'unknown' },
       })),
-      edges: (graph.edges || []).map(e => ({
-        id: e.id, source: e.source, target: e.target, label: e.relationship,
+      edges: (graph.edges || []).filter(e => e?.source && e?.target).map(e => ({
+        id: e.id || `${e.source}-${e.target}`,
+        source: e.source,
+        target: e.target,
+        label: e.relationship || '',
         style: { stroke: '#333', strokeWidth: 1.5 },
         labelStyle: { fill: '#666', fontSize: 8 },
         labelBgStyle: { fill: '#0A0A0A', fillOpacity: 0.9 },
@@ -43,14 +46,53 @@ export default function InvestigationGraph({ graph }) {
     };
   }, [graph]);
 
-  if (nodes.length === 0) return <p style={{ fontSize: '0.68rem', color: T.textDim }}>No graph data</p>;
+  if (loading) {
+    return (
+      <div style={{ height: 380, borderRadius: T.radius, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textDim, fontSize: '0.7rem' }}>
+        Loading graph...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ height: 380, borderRadius: T.radius, border: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <p style={{ fontSize: '0.72rem', color: T.textMuted }}>Unable to load investigation graph</p>
+        {onRetry && <button onClick={onRetry} style={{ padding: '4px 10px', borderRadius: T.radius, background: 'transparent', color: T.textDim, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: '0.65rem' }}>Retry</button>}
+      </div>
+    );
+  }
+
+  if (nodes.length === 0) {
+    return (
+      <div style={{ height: 380, borderRadius: T.radius, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ fontSize: '0.72rem', color: T.textFaint, fontStyle: 'italic' }}>No relationship data available for this investigation.</p>
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: 380, borderRadius: T.radius, overflow: 'hidden', border: `1px solid ${T.border}` }}>
       <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} fitView proOptions={{ hideAttribution: true }} style={{ background: '#050505' }}>
         <Background color="#222" gap={18} size={1} />
         <Controls style={{ background: '#111', borderColor: T.border }} />
-        <MiniMap nodeColor={n => TYPES[n.data?.nodeType] || '#666'} style={{ background: '#111', border: `1px solid ${T.border}` }} maskColor="rgba(0,0,0,0.85)" />
+        <MiniMap
+          nodeColor={n => {
+            const risk = n.data?.risk;
+            if (risk === 'malicious') return '#F87171';
+            if (risk === 'suspicious') return '#FBBF24';
+            if (risk === 'safe' || risk === 'clean') return '#4ADE80';
+            return TYPES[n.data?.nodeType] || '#888';
+          }}
+          maskColor="rgba(0,0,0,0.55)"
+          style={{
+            background: '#0A0A0A',
+            border: `1px solid ${T.border}`,
+            borderRadius: T.radius,
+          }}
+          pannable={false}
+          zoomable={false}
+        />
       </ReactFlow>
     </div>
   );

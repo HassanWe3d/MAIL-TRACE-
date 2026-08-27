@@ -1,26 +1,85 @@
 """Investigation API routes."""
 import uuid
 from datetime import datetime
-from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Query
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException, Query, BackgroundTasks
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.database import get_db
+from app.db.database import get_db, async_session_factory
 from app.db.models import Investigation, EmailMetadata, EmailHeader, ReceivedHop, AuthenticationResult, IOC, IPEnrichment, ThreatIntelResult, Attachment, AIAnalysis, RiskScoreDetail
 from app.services.investigation_service import run_investigation
 from app.core.logging_config import logger
+from app.core.config import get_settings
+from app.core.exceptions import FileTooLargeError, InvalidFileTypeError
 
+settings = get_settings()
 router = APIRouter(prefix="/api/investigations", tags=["investigations"])
 
 
+async def _run_background(inv_id: uuid.UUID, eml_bytes: bytes, filename: str):
+    """Run investigation in background with its own DB session."""
+    async with async_session_factory() as db:
+        try:
+            await run_investigation(db, eml_bytes, filename, inv_id)
+            await db.commit()
+        except Exception as e:
+            logger.error("Background investigation %s failed: %s", inv_id, e)
+            await db.rollback()
+            # Mark investigation as failed with error message
+            try:
+                async with async_session_factory() as fail_db:
+                    result = await fail_db.execute(select(Investigation).where(Investigation.id == inv_id))
+                    inv = result.scalar_one_or_none()
+                    if inv:
+                        inv.status = "failed"
+                        inv.error_message = str(e)[:500]
+                        await fail_db.commit()
+            except Exception:
+                logger.error("Could not mark investigation %s as failed", inv_id)
+
+
 @router.post("/upload")
-async def upload_eml(file: UploadFile = File(...), db: AsyncSession = Depends(get_db)):
+async def upload_eml(
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: AsyncSession = Depends(get_db),
+):
     if not file.filename or not file.filename.lower().endswith(".eml"):
-        raise HTTPException(status_code=400, detail="Only .eml files are accepted")
+        raise InvalidFileTypeError(file.filename or "unknown")
+
+    # Read into memory with size check
     eml_bytes = await file.read()
-    if len(eml_bytes) > 10 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="File too large (max 10MB)")
-    result = await run_investigation(db, eml_bytes, file.filename)
-    return {"success": True, "data": result}
+    size_mb = len(eml_bytes) / (1024 * 1024)
+    if len(eml_bytes) > settings.max_upload_bytes:
+        raise FileTooLargeError(size_mb, settings.MAX_UPLOAD_SIZE_MB)
+
+    if len(eml_bytes) == 0:
+        raise HTTPException(status_code=400, detail="File is empty")
+
+    # Create investigation in 'uploading' state and return immediately
+    inv_id = uuid.uuid4()
+    inv = Investigation(
+        id=inv_id,
+        filename=file.filename,
+        status="processing",
+        file_size=len(eml_bytes),
+        created_at=datetime.utcnow(),
+    )
+    db.add(inv)
+    await db.flush()
+    await db.commit()
+
+    # Schedule background processing
+    background_tasks.add_task(_run_background, inv_id, eml_bytes, file.filename)
+
+    return {
+        "success": True,
+        "data": {
+            "id": str(inv_id),
+            "status": "processing",
+            "filename": file.filename,
+            "file_size": len(eml_bytes),
+        },
+    }
 
 
 @router.get("")
@@ -32,6 +91,21 @@ async def list_investigations(page: int = Query(1, ge=1), page_size: int = Query
     result = await db.execute(q)
     invs = result.scalars().all()
     items = [{"id": str(i.id), "created_at": i.created_at.isoformat() if i.created_at else None, "filename": i.filename, "status": i.status, "sender": i.sender, "subject": i.subject, "risk_score": i.risk_score, "risk_level": i.risk_level, "classification": i.classification, "ai_confidence": i.ai_confidence} for i in invs]
+    # Auto-mark stale investigations stuck in 'processing' for > 5 minutes
+    from datetime import datetime, timedelta, timezone
+    stale_cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+    stale_q = select(Investigation).where(
+        Investigation.status == 'processing',
+        Investigation.created_at < stale_cutoff,
+    )
+    stale_result = await db.execute(stale_q)
+    stale_invs = stale_result.scalars().all()
+    for stale_inv in stale_invs:
+        stale_inv.status = 'failed'
+        stale_inv.error_message = 'Investigation timed out. The server may have restarted during processing.'
+    if stale_invs:
+        await db.flush()
+
     return {"success": True, "data": {"items": items, "total": total, "page": page, "page_size": page_size, "pages": (total + page_size - 1) // page_size}}
 
 
@@ -45,7 +119,16 @@ async def get_investigation(inv_id: str, db: AsyncSession = Depends(get_db)):
     inv = result.scalar_one_or_none()
     if not inv:
         raise HTTPException(status_code=404, detail="Investigation not found")
-    
+
+    # Auto-mark stale investigation stuck in 'processing' for > 5 minutes
+    from datetime import datetime, timedelta, timezone
+    if inv.status == 'processing' and inv.created_at:
+        stale_cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+        if inv.created_at.replace(tzinfo=timezone.utc) < stale_cutoff if inv.created_at.tzinfo is None else inv.created_at < stale_cutoff:
+            inv.status = 'failed'
+            inv.error_message = 'Investigation timed out. The server may have restarted during processing.'
+            await db.flush()
+
     meta_r = await db.execute(select(EmailMetadata).where(EmailMetadata.investigation_id == uid))
     meta = meta_r.scalar_one_or_none()
     headers_r = await db.execute(select(EmailHeader).where(EmailHeader.investigation_id == uid))
@@ -68,7 +151,7 @@ async def get_investigation(inv_id: str, db: AsyncSession = Depends(get_db)):
     risk = risk_r.scalar_one_or_none()
 
     return {"success": True, "data": {
-        "id": str(inv.id), "created_at": inv.created_at.isoformat() if inv.created_at else None, "filename": inv.filename, "status": inv.status, "sender": inv.sender, "subject": inv.subject, "date": inv.date.isoformat() if inv.date else None, "risk_score": inv.risk_score, "risk_level": inv.risk_level, "classification": inv.classification, "ai_confidence": inv.ai_confidence,
+        "id": str(inv.id), "created_at": inv.created_at.isoformat() if inv.created_at else None, "filename": inv.filename, "status": inv.status, "sender": inv.sender, "subject": inv.subject, "date": inv.date.isoformat() if inv.date else None, "risk_score": inv.risk_score, "risk_level": inv.risk_level, "classification": inv.classification, "ai_confidence": inv.ai_confidence, "error_message": getattr(inv, 'error_message', None),
         "email_metadata": {"from_address": meta.from_address if meta else None, "to_addresses": meta.to_addresses if meta else None, "cc_addresses": meta.cc_addresses if meta else None, "subject": meta.subject if meta else None, "date": meta.date.isoformat() if meta and meta.date else None, "reply_to": meta.reply_to if meta else None, "return_path": meta.return_path if meta else None, "message_id": meta.message_id if meta else None} if meta else None,
         "headers": [{"name": h.name, "value": h.value} for h in headers],
         "received_hops": [{"hop_order": h.hop_order, "raw_header": h.raw_header, "source_ip": h.source_ip, "destination_ip": h.destination_ip, "source_hostname": h.source_hostname, "destination_hostname": h.destination_hostname, "timestamp": h.timestamp.isoformat() if h.timestamp else None} for h in hops],

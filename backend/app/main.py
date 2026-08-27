@@ -1,9 +1,18 @@
 """FastAPI application entry point."""
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.core.config import get_settings
 from app.core.logging_config import logger
+from app.core.exceptions import (
+    InvestigationError,
+    investigation_error_handler,
+    http_exception_handler,
+    validation_error_handler,
+    generic_exception_handler,
+)
 from app.db.database import init_db, close_db
 from app.api.routes.investigations import router as investigations_router
 from app.api.routes.graph import router as graph_router
@@ -42,6 +51,13 @@ app.include_router(investigations_router)
 app.include_router(graph_router)
 app.include_router(reports_router)
 app.include_router(health_router)
+
+
+# ── Exception handlers ──────────────────────────────────────────────
+app.add_exception_handler(InvestigationError, investigation_error_handler)
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_error_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 
 @app.get("/api/health")

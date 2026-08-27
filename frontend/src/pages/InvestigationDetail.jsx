@@ -1,15 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getInvestigation, getInvestigationGraph, getReportUrl } from '../api';
+import { getInvestigation, getInvestigationGraph, getReportUrl, ApiError } from '../api';
 import { T, riskColor, statusColor, card, sectionHead, mono } from '../theme';
 import AppShell from '../components/AppShell';
 import InvestigationGraph from '../components/InvestigationGraph';
 
-function Row({ label, value, m }) {
+function formatDate(val) {
+  if (!val) return null;
+  try {
+    const d = new Date(val);
+    return isNaN(d.getTime()) ? val : d.toLocaleString();
+  } catch { return val; }
+}
+
+function Row({ label, value, m, isDate }) {
+  const display = isDate ? formatDate(value) : value;
   return (
     <div style={{ display: 'flex', gap: 10, padding: '4px 0', borderBottom: `1px solid ${T.border}` }}>
       <span style={{ minWidth: 90, fontSize: '0.65rem', color: T.textFaint, fontWeight: 500, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: '0.65rem', color: T.textMuted, wordBreak: 'break-all', ...(m ? mono : {}) }}>{value || '—'}</span>
+      <span style={{ fontSize: '0.65rem', color: T.textMuted, wordBreak: 'break-all', ...(m ? mono : {}) }}>{display || '—'}</span>
     </div>
   );
 }
@@ -50,23 +59,47 @@ export default function InvestigationDetail() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [graph, setGraph] = useState(null);
+  const [graphLoading, setGraphLoading] = useState(true);
+  const [graphError, setGraphError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notFound, setNotFound] = useState(false);
+  const pollRef = useRef(null);
 
   const load = useCallback(async () => {
     try {
-      setLoading(true); setError(null);
-      const [r, g] = await Promise.all([getInvestigation(id), getInvestigationGraph(id).catch(() => null)]);
-      setData(r.data);
-      if (g?.data) setGraph(g.data);
-    } catch (e) { setError(e.message); }
-    finally { setLoading(false); }
+      setLoading(true); setError(null); setNotFound(false);
+      const [r, g] = await Promise.allSettled([getInvestigation(id), getInvestigationGraph(id)]);
+      if (r.status === 'fulfilled') {
+        setData(r.value.data);
+        if (r.value.data?.status === 'processing') {
+          pollRef.current = setTimeout(() => load(), 3000);
+        }
+      } else {
+        if (r.reason instanceof ApiError && r.reason.status === 404) setNotFound(true);
+        else throw r.reason;
+      }
+      if (g.status === 'fulfilled' && g.value?.data) {
+        setGraph(g.value.data);
+        setGraphError(false);
+      } else {
+        setGraphError(true);
+      }
+      setGraphLoading(false);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) {
+        setNotFound(true);
+      } else {
+        setError(e.message);
+      }
+    } finally { setLoading(false); }
   }, [id]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); return () => { if (pollRef.current) clearTimeout(pollRef.current); }; }, [load]);
 
-  if (loading) return <AppShell><div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textDim, fontSize: '0.75rem' }}>Loading investigation...</div></AppShell>;
-  if (error) return <AppShell><div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, padding: 40 }}><p style={{ color: T.textMuted, fontSize: '0.8rem' }}>{error}</p><button onClick={() => navigate('/dashboard')} style={{ padding: '6px 14px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: '0.7rem' }}>Dashboard</button></div></AppShell>;
+  if (loading && !data) return <AppShell><div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textDim, fontSize: '0.75rem' }}><div style={{ width: 20, height: 20, border: `2px solid ${T.border}`, borderTopColor: T.white, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 8px' }} /><div>Loading investigation...</div></div></AppShell>;
+  if (notFound) return <AppShell><div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, padding: 40 }}><p style={{ color: T.white, fontSize: '1.2rem', fontWeight: 700 }}>Investigation not found</p><p style={{ color: T.textDim, fontSize: '0.75rem' }}>This investigation may have been deleted or the ID is invalid.</p><button onClick={() => navigate('/dashboard')} style={{ padding: '6px 14px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: '0.7rem' }}>Back to Dashboard</button></div></AppShell>;
+  if (error) return <AppShell><div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, padding: 40 }}><p style={{ color: T.textMuted, fontSize: '0.8rem', textAlign: 'center', maxWidth: 400 }}>{error}</p><div style={{ display: 'flex', gap: 8 }}><button onClick={load} style={{ padding: '6px 14px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: '0.7rem' }}>Retry</button><button onClick={() => navigate('/dashboard')} style={{ padding: '6px 14px', borderRadius: T.radius, background: 'transparent', color: T.textMuted, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: '0.7rem' }}>Dashboard</button></div></div></AppShell>;
   if (!data) return null;
 
   const rc = riskColor(data.risk_level);
@@ -96,6 +129,23 @@ export default function InvestigationDetail() {
       </header>
 
       <main style={{ padding: '18px 24px', flex: 1 }}>
+        {/* Processing Banner */}
+        {data.status === 'processing' && (
+          <div style={{ ...card, padding: '12px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10, borderColor: T.border, background: '#0A0A0A' }}>
+            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: T.warning, animation: 'pulse 1.5s infinite' }} />
+            <span style={{ fontSize: '0.75rem', color: T.textMuted, fontWeight: 500 }}>Analysis in progress — this page will update automatically.</span>
+          </div>
+        )}
+        {data.status === 'failed' && (
+          <div style={{ ...card, padding: '12px 18px', marginBottom: 16, borderColor: `${T.danger}40`, background: '#0A0A0A' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: '0.75rem', color: T.danger, fontWeight: 600 }}>Investigation failed</span>
+              <button onClick={load} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: T.radius, background: 'transparent', color: T.textMuted, border: `1px solid ${T.border}`, cursor: 'pointer', fontSize: '0.65rem' }}>Retry</button>
+            </div>
+            {data.error_message && <p style={{ fontSize: '0.6rem', color: T.textFaint, marginTop: 6 }}>{data.error_message}</p>}
+          </div>
+        )}
+
         {/* Risk Banner */}
         <div style={{ ...card, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, borderColor: `${rc}40` }}>
           <div style={{ width: 42, height: 42, borderRadius: 6, background: '#111', border: `1px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 700, color: rc, flexShrink: 0 }}>{data.risk_score ?? 0}</div>
@@ -110,7 +160,7 @@ export default function InvestigationDetail() {
         </div>
 
         {/* Two columns */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
 
           {/* LEFT */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -119,7 +169,7 @@ export default function InvestigationDetail() {
               <Row label="From" value={meta.from_address || data.sender} />
               <Row label="To" value={(meta.to_addresses || []).join(', ')} />
               <Row label="Subject" value={meta.subject || data.subject} />
-              <Row label="Date" value={meta.date || data.date} />
+              <Row label="Date" value={meta.date || data.date} isDate />
               <Row label="Reply-To" value={meta.reply_to} />
               <Row label="Return-Path" value={meta.return_path} />
               <Row label="Message-ID" value={meta.message_id} m />
@@ -237,7 +287,7 @@ export default function InvestigationDetail() {
                     <span style={{ fontSize: '0.7rem', color: T.white, fontWeight: 500 }}>{a.filename}</span>
                     <span style={{ fontSize: '0.55rem', color: T.textFaint }}>{a.mime_type}</span>
                   </div>
-                  <div style={{ fontSize: '0.55rem', color: T.textFaint, marginTop: 1 }}>{(a.size / 1024).toFixed(1)} KB</div>
+                  <div style={{ fontSize: '0.55rem', color: T.textFaint, marginTop: 1 }}>{a.size != null ? `${(a.size / 1024).toFixed(1)} KB` : 'Unknown size'}</div>
                   {a.sha256 && <div style={{ fontSize: '0.5rem', color: T.textFaint, marginTop: 1, ...mono }}>SHA-256: {a.sha256.substring(0, 32)}…</div>}
                 </div>
               ))}
@@ -261,13 +311,20 @@ export default function InvestigationDetail() {
         </div>
 
         {/* Graph */}
-        {graph && graph.nodes?.length > 0 && (
-          <div style={{ marginTop: 12 }}>
-            <Section title="Relationship Graph">
-              <InvestigationGraph graph={graph} />
-            </Section>
-          </div>
-        )}
+        <div style={{ marginTop: 12 }}>
+          <Section title="Relationship Graph">
+            <InvestigationGraph
+              graph={graph}
+              loading={graphLoading}
+              error={graphError}
+              onRetry={() => {
+                setGraphLoading(true);
+                setGraphError(false);
+                getInvestigationGraph(id).then(g => { setGraph(g?.data || null); setGraphLoading(false); }).catch(() => { setGraphError(true); setGraphLoading(false); });
+              }}
+            />
+          </Section>
+        </div>
       </main>
     </AppShell>
   );
