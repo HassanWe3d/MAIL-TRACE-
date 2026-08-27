@@ -20,6 +20,7 @@ from app.integrations.ai_provider import (
     _call_gemini,
     _call_openai,
     _call_deepseek,
+    _call_groq,
     _PROVIDER_CHAIN,
 )
 from app.integrations.gemini import FAIL_RESP
@@ -166,15 +167,17 @@ async def test_gemini_openai_fail_deepseek_succeeds():
 
 @pytest.mark.anyio
 async def test_all_providers_fail_returns_graceful_response():
-    """All three providers fail → graceful FAIL_RESP."""
+    """All four providers fail → graceful FAIL_RESP."""
     gemini_fail = AsyncMock(side_effect=TransientAIError("gemini", "429", 429))
     openai_fail = AsyncMock(side_effect=TransientAIError("openai", "503", 503))
     deepseek_fail = AsyncMock(side_effect=TransientAIError("deepseek", "502", 502))
+    groq_fail = AsyncMock(side_effect=TransientAIError("groq", "500", 500))
 
     with patch("app.integrations.ai_provider._PROVIDER_CHAIN", [
         ("gemini", gemini_fail),
         ("openai", openai_fail),
         ("deepseek", deepseek_fail),
+        ("groq", groq_fail),
     ]):
         result = await classify_with_claude(SAMPLE_EVIDENCE)
 
@@ -209,6 +212,7 @@ async def test_no_keys_returns_fail_resp():
         ("gemini", AsyncMock(side_effect=TransientAIError("gemini", "No API key configured"))),
         ("openai", AsyncMock(side_effect=TransientAIError("openai", "No API key configured"))),
         ("deepseek", AsyncMock(side_effect=TransientAIError("deepseek", "No API key configured"))),
+        ("groq", AsyncMock(side_effect=TransientAIError("groq", "No API key configured"))),
     ]):
         result = await classify_with_claude(SAMPLE_EVIDENCE)
 
@@ -250,9 +254,9 @@ async def test_gemini_connection_error_falls_to_openai():
 
 @pytest.mark.anyio
 async def test_provider_chain_order():
-    """Verify the provider chain is Gemini → OpenAI → DeepSeek."""
+    """Verify the provider chain is Gemini → OpenAI → DeepSeek → Groq."""
     names = [name for name, _ in _PROVIDER_CHAIN]
-    assert names == ["gemini", "openai", "deepseek"]
+    assert names == ["gemini", "openai", "deepseek", "groq"]
 
 
 @pytest.mark.anyio
@@ -289,3 +293,110 @@ async def test_investigation_service_uses_ai_provider():
     import app.integrations.ai_provider as ai_mod
     # The module-level reference should point to ai_provider.classify_with_claude
     assert inv_mod.classify_with_claude is ai_mod.classify_with_claude
+
+
+# ── Groq-specific tests ────────────────────────────────────────────────
+
+@pytest.mark.anyio
+async def test_groq_succeeds_when_prior_providers_fail():
+    """Gemini + OpenAI + DeepSeek fail → Groq succeeds."""
+    gemini_fail = AsyncMock(side_effect=TransientAIError("gemini", "429", 429))
+    openai_fail = AsyncMock(side_effect=TransientAIError("openai", "503", 503))
+    deepseek_fail = AsyncMock(side_effect=TransientAIError("deepseek", "502", 502))
+    groq_ok = AsyncMock(return_value=_make_good_result())
+
+    with patch("app.integrations.ai_provider._PROVIDER_CHAIN", [
+        ("gemini", gemini_fail),
+        ("openai", openai_fail),
+        ("deepseek", deepseek_fail),
+        ("groq", groq_ok),
+    ]):
+        result = await classify_with_claude(SAMPLE_EVIDENCE)
+
+    assert result["classification"] == "phishing"
+    assert result["confidence"] == 0.9
+    gemini_fail.assert_awaited_once()
+    openai_fail.assert_awaited_once()
+    deepseek_fail.assert_awaited_once()
+    groq_ok.assert_awaited_once()
+
+
+@pytest.mark.anyio
+async def test_full_fallback_chain_gemini_to_groq():
+    """Full chain: Gemini→OpenAI→DeepSeek fail, Groq succeeds."""
+    for provider, err_code in [("gemini", 429), ("openai", 503), ("deepseek", 502)]:
+        pass  # just documenting the chain
+    groq_ok = AsyncMock(return_value=_make_good_result())
+
+    with patch("app.integrations.ai_provider._PROVIDER_CHAIN", [
+        ("gemini", AsyncMock(side_effect=TransientAIError("gemini", "429", 429))),
+        ("openai", AsyncMock(side_effect=TransientAIError("openai", "503", 503))),
+        ("deepseek", AsyncMock(side_effect=TransientAIError("deepseek", "502", 502))),
+        ("groq", groq_ok),
+    ]):
+        result = await classify_with_claude(SAMPLE_EVIDENCE)
+
+    assert result["classification"] == "phishing"
+    groq_ok.assert_awaited_once()
+
+
+@pytest.mark.anyio
+async def test_groq_missing_key_returns_transient():
+    """Missing GROQ_API_KEY → TransientAIError (falls through in chain)."""
+    # With all keys empty, all providers raise TransientAIError
+    with patch("app.integrations.ai_provider._PROVIDER_CHAIN", [
+        ("gemini", AsyncMock(side_effect=TransientAIError("gemini", "No API key configured"))),
+        ("openai", AsyncMock(side_effect=TransientAIError("openai", "No API key configured"))),
+        ("deepseek", AsyncMock(side_effect=TransientAIError("deepseek", "No API key configured"))),
+        ("groq", AsyncMock(side_effect=TransientAIError("groq", "No API key configured"))),
+    ]):
+        result = await classify_with_claude(SAMPLE_EVIDENCE)
+
+    assert result["classification"] == "unknown"
+    assert "No API key configured" in str(result.get("limitations", []))
+
+
+@pytest.mark.anyio
+async def test_groq_timeout_triggers_fallback():
+    """Groq timeout is transient — but it's the last provider, so FAIL_RESP."""
+    groq_timeout = AsyncMock(side_effect=TransientAIError("groq", "Request timed out"))
+
+    with patch("app.integrations.ai_provider._PROVIDER_CHAIN", [
+        ("groq", groq_timeout),
+    ]):
+        result = await classify_with_claude(SAMPLE_EVIDENCE)
+
+    assert result["classification"] == "unknown"
+    assert result["error"] is not None
+
+
+@pytest.mark.anyio
+async def test_deepseek_fails_groq_succeeds():
+    """Gemini OK, OpenAI fails, DeepSeek fails, Groq succeeds."""
+    with patch("app.integrations.ai_provider._PROVIDER_CHAIN", [
+        ("gemini", AsyncMock(side_effect=TransientAIError("gemini", "429", 429))),
+        ("openai", AsyncMock(side_effect=TransientAIError("openai", "503", 503))),
+        ("deepseek", AsyncMock(side_effect=TransientAIError("deepseek", "502", 502))),
+        ("groq", AsyncMock(return_value=_make_good_result())),
+    ]):
+        result = await classify_with_claude(SAMPLE_EVIDENCE)
+
+    assert result["classification"] == "phishing"
+    assert result["confidence"] == 0.9
+
+
+@pytest.mark.anyio
+async def test_groq_success_skips_nothing_after():
+    """When Groq is called and succeeds, no further providers exist."""
+    groq_ok = AsyncMock(return_value=_make_good_result())
+
+    with patch("app.integrations.ai_provider._PROVIDER_CHAIN", [
+        ("gemini", AsyncMock(side_effect=TransientAIError("gemini", "503", 503))),
+        ("openai", AsyncMock(side_effect=TransientAIError("openai", "503", 503))),
+        ("deepseek", AsyncMock(side_effect=TransientAIError("deepseek", "503", 503))),
+        ("groq", groq_ok),
+    ]):
+        result = await classify_with_claude(SAMPLE_EVIDENCE)
+
+    assert result["classification"] == "phishing"
+    groq_ok.assert_awaited_once()

@@ -1,6 +1,6 @@
 """Multi-provider AI fallback system for email threat classification.
 
-Providers (in order): Gemini → OpenAI → DeepSeek
+Providers (in order): Gemini → OpenAI → DeepSeek → Groq
 Falls through on transient errors (429, 5xx, timeout, connection).
 Returns FAIL_RESP only when ALL providers are exhausted.
 """
@@ -223,6 +223,63 @@ async def _call_deepseek(evidence: dict) -> dict:
     return result
 
 
+# ── Provider: Groq ─────────────────────────────────────────────────────
+
+_GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+
+async def _call_groq(evidence: dict) -> dict:
+    """Call Groq chat completions (OpenAI-compatible API). Raises TransientAIError on transient failures."""
+    if not settings.GROQ_API_KEY:
+        raise TransientAIError("groq", "No API key configured")
+
+    model = settings.GROQ_MODEL
+    user_content = _build_user_content(evidence)
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            resp = await client.post(
+                _GROQ_URL,
+                headers={
+                    "Authorization": f"Bearer {settings.GROQ_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": "You are an email threat analyst. Return ONLY valid JSON."},
+                        {"role": "user", "content": user_content},
+                    ],
+                    "temperature": 0.3,
+                    "max_tokens": 2000,
+                    "response_format": {"type": "json_object"},
+                },
+            )
+        except httpx.TimeoutException:
+            raise TransientAIError("groq", "Request timed out")
+        except httpx.ConnectError:
+            raise TransientAIError("groq", "Connection failed")
+
+    if resp.status_code in _TRANSIENT_STATUS_CODES:
+        raise TransientAIError("groq", f"HTTP {resp.status_code}", resp.status_code)
+    if resp.status_code in (401, 403):
+        raise  # permanent — auth error
+    if resp.status_code != 200:
+        raise TransientAIError("groq", f"HTTP {resp.status_code}", resp.status_code)
+
+    body = resp.json()
+    raw_text = body.get("choices", [{}])[0].get("message", {}).get("content", "")
+    if not raw_text:
+        raise TransientAIError("groq", "Empty response")
+
+    cleaned = _strip_markdown_fences(raw_text)
+    result = json.loads(cleaned)
+    result = _normalize_response(result)
+    result["raw_ai_response"] = result.copy()
+    logger.info("Groq OK: classification=%s confidence=%.2f", result["classification"], result["confidence"])
+    return result
+
+
 # ── Fallback coordinator ────────────────────────────────────────────────
 
 # Provider chain: (name, callable)
@@ -230,13 +287,14 @@ _PROVIDER_CHAIN: list[tuple[str, Any]] = [
     ("gemini", _call_gemini),
     ("openai", _call_openai),
     ("deepseek", _call_deepseek),
+    ("groq", _call_groq),
 ]
 
 
 async def classify_with_claude(evidence: dict) -> dict:
     """Classify email evidence with automatic multi-provider fallback.
 
-    Tries providers in order: Gemini → OpenAI → DeepSeek.
+    Tries providers in order: Gemini → OpenAI → DeepSeek → Groq.
     Falls through on transient errors (429, 5xx, timeout, connection).
     Returns FAIL_RESP when all providers are exhausted.
     The function name is preserved for backward compatibility with investigation_service.py.
@@ -280,7 +338,7 @@ async def classify_with_claude(evidence: dict) -> dict:
         "error": str(last_error) if last_error else "All providers unavailable",
         "summary": "AI classification unavailable — all providers failed",
         "limitations": [
-            "All AI providers (Gemini, OpenAI, DeepSeek) are currently unavailable",
+            "All AI providers (Gemini, OpenAI, DeepSeek, Groq) are currently unavailable",
             f"Last error: {last_error}" if last_error else "No providers responded",
         ],
     }
