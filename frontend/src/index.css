@@ -52,3 +52,16 @@ button { font-family:inherit; -webkit-tap-highlight-color:transparent; }
   .stats-grid { grid-template-columns: 1fr !important; }
   .detail-grid { grid-template-columns: 1fr !important; }
 }
+
+/* Tab nav scrollbar */
+nav[role="tablist"]::-webkit-scrollbar { display: none; }
+nav[role="tablist"] { scrollbar-width: none; }
+
+/* Tab responsive: smaller padding on mobile */
+@media (max-width: 768px) {
+  nav[role="tablist"] button { padding: 10px 12px !important; font-size: 0.58rem !important; }
+}
+
+/* InfoTip hover effect */
+button[aria-label="More information"]:hover { background: rgba(255,255,255,0.06) !important; }
+
