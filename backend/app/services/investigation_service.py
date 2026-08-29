@@ -96,7 +96,14 @@ async def run_investigation(db, eml_bytes, filename, inv_id=None):
         # Deduplicate URLs and domains
         urls_dedup = list(dict.fromkeys(urls_list))[:10]
         domains_dedup = list(domains)[:10]
-        hashes_dedup = hashes[:5]
+        # Deduplicate hashes by (type, value) to avoid redundant VT lookups
+        seen_hashes = set()
+        hashes_dedup = []
+        for ht, hv in hashes:
+            if (ht, hv) not in seen_hashes:
+                seen_hashes.add((ht, hv))
+                hashes_dedup.append((ht, hv))
+        hashes_dedup = hashes_dedup[:5]
 
         async def eip(ip):
             c = await get_cached(db, "ip_api", "ip", ip)

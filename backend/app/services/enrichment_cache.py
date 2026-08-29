@@ -1,6 +1,7 @@
-"""PostgreSQL-backed enrichment cache."""
+"""PostgreSQL-backed enrichment cache with upsert support."""
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -24,14 +25,38 @@ async def get_cached(db: AsyncSession, source: str, ioc_type: str, value: str) -
 
 
 async def set_cached(db: AsyncSession, source: str, ioc_type: str, value: str, response: dict):
-    """Store enrichment result in cache."""
+    """Store enrichment result in cache using PostgreSQL upsert.
+
+    If a row with the same cache_key already exists, update it instead of
+    inserting a duplicate. This prevents UniqueViolationError when multiple
+    parallel enrichment tasks resolve to the same cache key.
+    """
     key = make_cache_key(source, ioc_type, value)
     expires = datetime.now(timezone.utc) + timedelta(hours=settings.CACHE_TTL_HOURS)
-    entry = EnrichmentCache(
-        cache_key=key, source=source, ioc_type=ioc_type,
-        ioc_value=value, response_json=response,
-        status="valid", expires_at=expires,
+
+    stmt = (
+        insert(EnrichmentCache)
+        .values(
+            cache_key=key,
+            source=source,
+            ioc_type=ioc_type,
+            ioc_value=value,
+            response_json=response,
+            status="valid",
+            expires_at=expires,
+        )
+        .on_conflict_do_update(
+            index_elements=["cache_key"],
+            set_={
+                "response_json": response,
+                "status": "valid",
+                "expires_at": expires,
+            },
+        )
     )
-    db.add(entry)
-    await db.flush()
-    logger.info("Cached: %s", key)
+    await db.execute(stmt)
+    # Use merge/flush-safe pattern: the upsert is executed as a single
+    # INSERT ... ON CONFLICT statement, so it never leaves the session in
+    # a broken state.  We do NOT call flush() here — the caller will
+    # flush/commit at the end of the investigation pipeline.
+    logger.info("Cached (upsert): %s", key)
