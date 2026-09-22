@@ -1,5 +1,32 @@
 *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
 html { font-size:16px; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; text-rendering:optimizeLegibility; }
+
+/* ============================================================
+   MAIL TRACE — Responsive Typography Scale
+   Single source of truth for every text size in the app.
+   - px floors guarantee laptop / screen-recording readability
+   - rem preferred values scale with the user's browser font size
+   - small vw term keeps type comfortable across 1280–1920 widths
+   Used from JS inline styles as: fontSize: 'var(--fs-md)'
+   ============================================================ */
+:root {
+  /* micro: tracked uppercase micro-labels, badges, sidebar captions */
+  --fs-micro: clamp(12px, 0.72rem + 0.05vw, 14px);
+  /* xs: captions, metadata, secondary rows */
+  --fs-xs:    clamp(12px, 0.76rem + 0.05vw, 14.5px);
+  /* sm: labels, table text, tooltips, small body */
+  --fs-sm:    clamp(12.5px, 0.81rem + 0.05vw, 15px);
+  /* md: body text, explanations, buttons, navigation */
+  --fs-md:    clamp(13.5px, 0.875rem + 0.05vw, 16px);
+  /* lg: card titles, subject lines, prominent body */
+  --fs-lg:    clamp(14.5px, 0.94rem + 0.05vw, 17px);
+  /* xl: section headings, key readouts, page sub-titles */
+  --fs-xl:    clamp(16px, 1.05rem + 0.06vw, 19.5px);
+  /* 2xl: page titles, stat numbers */
+  --fs-2xl:   clamp(20px, 1.4rem + 0.1vw, 27px);
+  /* hero: 404 / display numerals */
+  --fs-hero:  clamp(36px, 3rem, 56px);
+}
 body { margin:0; background:#000; color:#DEDEE0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; line-height:1.55; overflow-x:hidden; }
 #root { width:100%; min-height:100vh; }
 
@@ -57,9 +84,9 @@ button { font-family:inherit; -webkit-tap-highlight-color:transparent; }
 nav[role="tablist"]::-webkit-scrollbar { display: none; }
 nav[role="tablist"] { scrollbar-width: none; }
 
-/* Tab responsive: smaller padding on mobile */
+/* Tab responsive: tighter padding on mobile, but keep text readable */
 @media (max-width: 768px) {
-  nav[role="tablist"] button { padding: 10px 12px !important; font-size: 0.58rem !important; }
+  nav[role="tablist"] button { padding: 11px 12px !important; font-size: var(--fs-xs) !important; }
 }
 
 /* InfoTip hover effect */

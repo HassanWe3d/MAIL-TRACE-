@@ -34,7 +34,7 @@ export default function Landing() {
 
         {/* Subtitle */}
         <p style={{
-          color: '#555', fontSize: '0.62rem', letterSpacing: '0.35em',
+          color: '#555', fontSize: 'var(--fs-sm)', letterSpacing: '0.35em',
           textTransform: 'uppercase', margin: '18px 0 0', textAlign: 'center',
         }}>
           Email Forensics &nbsp;·&nbsp; Threat Intelligence
@@ -48,7 +48,7 @@ export default function Landing() {
             marginTop: 64, padding: '14px 40px', borderRadius: 6,
             background: 'transparent',
             border: '1px solid #2A2A2F',
-            color: '#FFF', fontSize: '0.7rem', fontWeight: 500,
+            color: '#FFF', fontSize: 'var(--fs-md)', fontWeight: 500,
             letterSpacing: '0.25em', textTransform: 'uppercase',
             cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             display: 'flex', alignItems: 'center', gap: 10,
@@ -67,7 +67,7 @@ export default function Landing() {
           }}
         >
           Enter
-          <span className="arr" style={{ transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', fontSize: '0.82rem' }}>→</span>
+          <span className="arr" style={{ transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', fontSize: 'var(--fs-lg)' }}>→</span>
         </button>
       </div>
 
@@ -75,7 +75,7 @@ export default function Landing() {
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 2,
         padding: '18px 20px', textAlign: 'center',
-        fontSize: '0.58rem', color: '#3A3A3F', letterSpacing: '0.1em',
+        fontSize: 'var(--fs-xs)', color: '#3A3A3F', letterSpacing: '0.1em',
         textTransform: 'uppercase',
       }}>
         Made by Team - TRACEx

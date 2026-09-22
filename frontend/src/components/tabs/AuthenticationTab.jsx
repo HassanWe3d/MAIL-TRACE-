@@ -43,40 +43,40 @@ function AuthResult({ label, result, domain, reason, info }) {
     }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-        <span style={{ fontSize: '0.82rem', fontWeight: 700, color: T.white }}>{label}</span>
+        <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: T.white }}>{label}</span>
         <InfoTip text={info.what} />
         <span style={{
-          fontSize: '0.56rem', padding: '3px 10px', borderRadius: 4, fontWeight: 700,
+          fontSize: 'var(--fs-xs)', padding: '3px 10px', borderRadius: 4, fontWeight: 700,
           background: `${c}14`, color: c,
           border: `1px solid ${c}30`, textTransform: 'uppercase', letterSpacing: '0.06em', marginLeft: 'auto',
         }}>{result || 'UNKNOWN'}</span>
       </div>
 
       {/* What is it? */}
-      <p style={{ fontSize: '0.64rem', color: T.textDim, lineHeight: 1.55, marginBottom: 10 }}>{info.what}</p>
+      <p style={{ fontSize: 'var(--fs-sm)', color: T.textDim, lineHeight: 1.55, marginBottom: 10 }}>{info.what}</p>
 
       {/* What did we find? */}
       <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: '0.53rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>What did we find</div>
-        <div style={{ fontSize: '0.66rem', color: T.textMuted, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>What did we find</div>
+        <div style={{ fontSize: 'var(--fs-sm)', color: T.textMuted, lineHeight: 1.5 }}>
           {label} result: <strong style={{ color: c }}>{(result || 'unknown').toUpperCase()}</strong>
-          {domain && <> for domain <span style={{ fontFamily: '"SF Mono", ui-monospace, monospace', fontSize: '0.62rem' }}>{domain}</span></>}
+          {domain && <> for domain <span style={{ fontFamily: '"SF Mono", ui-monospace, monospace', fontSize: 'var(--fs-sm)' }}>{domain}</span></>}
         </div>
       </div>
 
       {/* Why does it matter? */}
       {whyMatters && (
         <div>
-          <div style={{ fontSize: '0.53rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>Why this matters</div>
-          <p style={{ fontSize: '0.64rem', color: isFail ? T.danger : T.textDim, lineHeight: 1.55, margin: 0 }}>{whyMatters}</p>
+          <div style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>Why this matters</div>
+          <p style={{ fontSize: 'var(--fs-sm)', color: isFail ? T.danger : T.textDim, lineHeight: 1.55, margin: 0 }}>{whyMatters}</p>
         </div>
       )}
 
       {/* Additional reason if present */}
       {reason && (
         <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: T.radiusSm, background: T.bgPanel, border: `1px solid ${T.border}` }}>
-          <span style={{ fontSize: '0.53rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Detail</span>
-          <p style={{ fontSize: '0.6rem', color: T.textDim, marginTop: 3, lineHeight: 1.4, fontFamily: '"SF Mono", ui-monospace, monospace', wordBreak: 'break-all' }}>{reason}</p>
+          <span style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>Detail</span>
+          <p style={{ fontSize: 'var(--fs-sm)', color: T.textDim, marginTop: 3, lineHeight: 1.4, fontFamily: '"SF Mono", ui-monospace, monospace', wordBreak: 'break-all' }}>{reason}</p>
         </div>
       )}
     </div>
@@ -91,7 +91,7 @@ export default function AuthenticationTab({ data }) {
   if (!auth || Object.keys(auth).length === 0) {
     return (
       <div style={{ padding: 24, textAlign: 'center' }}>
-        <p style={{ fontSize: '0.75rem', color: T.textFaint }}>Authentication results are not available for this investigation.</p>
+        <p style={{ fontSize: 'var(--fs-md)', color: T.textFaint }}>Authentication results are not available for this investigation.</p>
       </div>
     );
   }
@@ -100,7 +100,7 @@ export default function AuthenticationTab({ data }) {
     <div style={{ animation: 'fadeIn 0.2s ease' }}>
       {/* Section intro */}
       <div style={{ padding: '12px 16px', borderRadius: T.radius, background: T.bgPanel, border: `1px solid ${T.border}`, marginBottom: 20 }}>
-        <p style={{ fontSize: '0.68rem', color: T.textMuted, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontSize: 'var(--fs-md)', color: T.textMuted, lineHeight: 1.6, margin: 0 }}>
           <strong>Email authentication</strong> helps verify whether the sending infrastructure is authorized by the domain that appears in the sender address.
           These checks are critical for identifying spoofed or phishing emails.
         </p>
@@ -136,17 +136,17 @@ export default function AuthenticationTab({ data }) {
       {/* Mismatch warnings */}
       {(auth.domain_mismatch || auth.reply_to_mismatch) && (
         <div style={{ marginTop: 12 }}>
-          <div style={{ fontSize: '0.56rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 8 }}>Additional Warnings</div>
+          <div style={{ fontSize: 'var(--fs-xs)', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 8 }}>Additional Warnings</div>
           {auth.domain_mismatch && (
             <div style={{
               padding: '12px 16px', borderRadius: T.radius, background: '#0C0808',
               border: `1px solid ${T.warning}25`, marginBottom: 8,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <span style={{ color: T.warning, fontSize: '0.85rem' }}>⚠</span>
-                <span style={{ fontSize: '0.72rem', color: T.warning, fontWeight: 600 }}>Sender Domain Mismatch</span>
+                <span style={{ color: T.warning, fontSize: 'var(--fs-lg)' }}>⚠</span>
+                <span style={{ fontSize: 'var(--fs-md)', color: T.warning, fontWeight: 600 }}>Sender Domain Mismatch</span>
               </div>
-              <p style={{ fontSize: '0.64rem', color: T.textDim, lineHeight: 1.5, margin: 0 }}>
+              <p style={{ fontSize: 'var(--fs-sm)', color: T.textDim, lineHeight: 1.5, margin: 0 }}>
                 The From domain (<strong style={{ color: T.text }}>{auth.from_domain}</strong>) differs from the Return-Path domain (<strong style={{ color: T.text }}>{auth.return_path_domain}</strong>).
                 This can indicate email forwarding, mailing list behavior, or a potential spoofing attempt.
               </p>
@@ -158,10 +158,10 @@ export default function AuthenticationTab({ data }) {
               border: `1px solid ${T.warning}25`,
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                <span style={{ color: T.warning, fontSize: '0.85rem' }}>⚠</span>
-                <span style={{ fontSize: '0.72rem', color: T.warning, fontWeight: 600 }}>Reply-To Mismatch</span>
+                <span style={{ color: T.warning, fontSize: 'var(--fs-lg)' }}>⚠</span>
+                <span style={{ fontSize: 'var(--fs-md)', color: T.warning, fontWeight: 600 }}>Reply-To Mismatch</span>
               </div>
-              <p style={{ fontSize: '0.64rem', color: T.textDim, lineHeight: 1.5, margin: 0 }}>
+              <p style={{ fontSize: 'var(--fs-sm)', color: T.textDim, lineHeight: 1.5, margin: 0 }}>
                 The Reply-To address (<strong style={{ color: T.text }}>{auth.reply_to}</strong>) differs from the From address (<strong style={{ color: T.text }}>{auth.from_address}</strong>).
                 This means replies would go to a different person than the apparent sender — a common phishing technique.
               </p>

@@ -25,7 +25,7 @@ export default function InfoTip({ text, children }) {
         aria-label="More information"
         style={{
           width: 16, height: 16, borderRadius: '50%', border: `1px solid ${T.border}`,
-          background: 'transparent', color: T.textFaint, fontSize: '0.5rem', fontWeight: 700,
+          background: 'transparent', color: T.textFaint, fontSize: 'var(--fs-micro)', fontWeight: 700,
           cursor: 'help', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
           fontFamily: 'inherit', lineHeight: 1, padding: 0, flexShrink: 0,
         }}
@@ -36,7 +36,7 @@ export default function InfoTip({ text, children }) {
           marginBottom: 6, zIndex: 1000, width: 260, padding: '10px 12px',
           background: T.surface, border: `1px solid ${T.borderHover}`, borderRadius: T.radius,
           boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-          fontSize: '0.62rem', color: T.textMuted, lineHeight: 1.5,
+          fontSize: 'var(--fs-sm)', color: T.textMuted, lineHeight: 1.5,
           pointerEvents: 'none',
         }}>
           {children || text}

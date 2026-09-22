@@ -36,25 +36,25 @@ function IOCRow({ ioc, copied, onCopy }) {
       marginBottom: 4,
     }}>
       <span style={{
-        fontSize: '0.48rem', padding: '2px 6px', borderRadius: 3,
+        fontSize: 'var(--fs-micro)', padding: '2px 6px', borderRadius: 3,
         background: T.surfaceActive, color: T.textDim, fontWeight: 600,
         textTransform: 'uppercase', letterSpacing: '0.04em', flexShrink: 0, minWidth: 54, textAlign: 'center',
       }}>{ioc.ioc_type}</span>
       <span style={{
-        fontSize: '0.62rem', color: T.textMuted, flex: 1,
+        fontSize: 'var(--fs-sm)', color: T.textMuted, flex: 1,
         fontFamily: '"SF Mono", ui-monospace, monospace',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }} title={value}>{value}</span>
-      {ioc.source && <span style={{ fontSize: '0.48rem', color: T.textFaint, flexShrink: 0 }}>{ioc.source}</span>}
+      {ioc.source && <span style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, flexShrink: 0 }}>{ioc.source}</span>}
       <span style={{
-        fontSize: '0.5rem', padding: '2px 7px', borderRadius: 4,
+        fontSize: 'var(--fs-micro)', padding: '2px 7px', borderRadius: 4,
         background: `${c}12`, color: c, fontWeight: 600,
         textTransform: 'uppercase', flexShrink: 0,
       }}>{ioc.risk || 'unknown'}</span>
       <button
         onClick={() => onCopy(value)}
         style={{
-          fontSize: '0.5rem', padding: '2px 6px', borderRadius: 3,
+          fontSize: 'var(--fs-micro)', padding: '2px 6px', borderRadius: 3,
           background: 'transparent', border: `1px solid ${T.border}`,
           color: T.textFaint, cursor: 'pointer', flexShrink: 0,
           fontFamily: 'inherit', transition: 'border-color 0.15s',
@@ -92,7 +92,7 @@ export default function IOCsTab({ data }) {
     <div style={{ animation: 'fadeIn 0.2s ease' }}>
       {/* Intro */}
       <div style={{ padding: '12px 16px', borderRadius: T.radius, background: T.bgPanel, border: `1px solid ${T.border}`, marginBottom: 20 }}>
-        <p style={{ fontSize: '0.68rem', color: T.textMuted, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontSize: 'var(--fs-md)', color: T.textMuted, lineHeight: 1.6, margin: 0 }}>
           <strong>Indicators of Compromise (IOCs)</strong> are pieces of technical information extracted from the email that can help identify
           potentially suspicious activity — such as IP addresses, domains, URLs, or file hashes.
         </p>
@@ -101,14 +101,14 @@ export default function IOCsTab({ data }) {
       {/* Total count */}
       {iocs.length > 0 && (
         <div style={{ padding: '10px 16px', borderRadius: T.radius, background: T.surface, border: `1px solid ${T.border}`, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: T.white }}>{iocs.length}</span>
-          <span style={{ fontSize: '0.64rem', color: T.textDim }}>indicator{iocs.length !== 1 ? 's' : ''} extracted from this email</span>
+          <span style={{ fontSize: 'var(--fs-md)', fontWeight: 700, color: T.white }}>{iocs.length}</span>
+          <span style={{ fontSize: 'var(--fs-sm)', color: T.textDim }}>indicator{iocs.length !== 1 ? 's' : ''} extracted from this email</span>
         </div>
       )}
 
       {iocs.length === 0 ? (
         <div style={{ padding: 24, textAlign: 'center', borderRadius: T.radius, background: T.surface, border: `1px solid ${T.border}` }}>
-          <p style={{ fontSize: '0.72rem', color: T.textFaint, fontStyle: 'italic', margin: 0 }}>No indicators of compromise were detected in this email.</p>
+          <p style={{ fontSize: 'var(--fs-md)', color: T.textFaint, fontStyle: 'italic', margin: 0 }}>No indicators of compromise were detected in this email.</p>
         </div>
       ) : (
         Object.entries(grouped).map(([type, items]) => (

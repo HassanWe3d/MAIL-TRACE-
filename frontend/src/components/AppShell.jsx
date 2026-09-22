@@ -26,8 +26,8 @@ export default function AppShell({ children }) {
           onMouseEnter={e => e.currentTarget.style.background = T.surfaceHover}
           onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
         >
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: T.white, letterSpacing: '0.08em' }}>MAIL TRACE</div>
-          <div style={{ fontSize: '0.44rem', color: T.textFaint, letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: 3 }}>Threat Intelligence</div>
+          <div style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: T.white, letterSpacing: '0.08em' }}>MAIL TRACE</div>
+          <div style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, letterSpacing: '0.18em', textTransform: 'uppercase', marginTop: 3 }}>Threat Intelligence</div>
         </div>
 
         {/* Nav */}
@@ -43,7 +43,7 @@ export default function AppShell({ children }) {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   padding: '9px 14px', borderRadius: T.radius,
-                  fontSize: '0.72rem', fontWeight: 500, textDecoration: 'none',
+                  fontSize: 'var(--fs-md)', fontWeight: 500, textDecoration: 'none',
                   color: active ? T.white : T.textDim,
                   background: active ? T.surfaceActive : 'transparent',
                   border: active ? `1px solid ${T.border}` : '1px solid transparent',
@@ -52,23 +52,23 @@ export default function AppShell({ children }) {
                 onMouseEnter={e => { if (!active) { e.currentTarget.style.background = T.surfaceHover; e.currentTarget.style.color = T.textMuted; }}}
                 onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = T.textDim; }}}
               >
-                <span style={{ fontSize: '0.6rem', opacity: active ? 0.8 : 0.4 }}>{item.icon}</span>
+                <span style={{ fontSize: 'var(--fs-sm)', opacity: active ? 0.8 : 0.4 }}>{item.icon}</span>
                 {item.label}
               </NavLink>
             );
           })}
         </nav>
 
-        <div style={{ padding: '12px 18px', borderTop: `1px solid ${T.border}`, fontSize: '0.42rem', color: T.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+        <div style={{ padding: '12px 18px', borderTop: `1px solid ${T.border}`, fontSize: 'var(--fs-micro)', color: T.textFaint, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           Email Forensic Platform
         </div>
       </aside>
 
-      <div className="hide-mobile" style={{ flex: 1, marginLeft: T.sidebarWidth, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="hide-mobile" style={{ flex: 1, marginLeft: T.sidebarWidth, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {children}
       </div>
       {/* Mobile layout — no sidebar */}
-      <div className="show-mobile" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="show-mobile" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {children}
       </div>
     </div>

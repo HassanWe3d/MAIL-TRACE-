@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ReactFlow, Background, Controls, MiniMap } from '@xyflow/react';
+import { ReactFlow, Background, Controls, MiniMap, Handle, Position } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { T, riskColor, statusColor } from '../theme';
 
@@ -15,19 +15,23 @@ function Node({ data }) {
     : data.risk === 'safe' || data.risk === 'clean' ? '#4ADE80'
     : null;
   return (
-    <div style={{
+    <>
+      <Handle type="target" position={Position.Left} style={{ width: 6, height: 6, background: '#3A3A40', border: `1px solid ${T.borderBright}` }} />
+      <Handle type="source" position={Position.Right} style={{ width: 6, height: 6, background: '#3A3A40', border: `1px solid ${T.borderBright}` }} />
+      <div style={{
       padding: '7px 12px', borderRadius: T.radius, background: '#0A0A0C',
       border: `1px solid ${rc || '#2A2A2F'}`,
-      fontSize: '0.6rem', color: T.text,
+      fontSize: 'var(--fs-sm)', color: T.text,
       fontFamily: '"SF Mono", ui-monospace, monospace',
       maxWidth: 180, minWidth: 80,
       overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       boxShadow: rc ? `0 0 8px ${rc}15` : '0 1px 3px rgba(0,0,0,0.3)',
       transition: 'box-shadow 0.15s ease',
     }}>
-      <div style={{ fontSize: '0.48rem', color: bg, marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{data.nodeType}</div>
+      <div style={{ fontSize: 'var(--fs-micro)', color: bg, marginBottom: 3, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{data.nodeType}</div>
       <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', color: rc ? '#FFF' : T.textMuted }}>{data.label}</div>
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -48,7 +52,7 @@ export default function InvestigationGraph({ graph, loading, error, onRetry }) {
         target: e.target,
         label: e.relationship || '',
         style: { stroke: '#2A2A30', strokeWidth: 1.5 },
-        labelStyle: { fill: '#555560', fontSize: 8, fontFamily: '"SF Mono", ui-monospace, monospace' },
+        labelStyle: { fill: '#555560', fontSize: 10, fontFamily: '"SF Mono", ui-monospace, monospace' },
         labelBgStyle: { fill: '#0A0A0C', fillOpacity: 0.95 },
         animated: false,
       })),
@@ -57,7 +61,7 @@ export default function InvestigationGraph({ graph, loading, error, onRetry }) {
 
   if (loading) {
     return (
-      <div style={{ height: 400, borderRadius: T.radius, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textDim, fontSize: '0.72rem', flexDirection: 'column', gap: 8 }}>
+      <div style={{ height: 400, borderRadius: T.radius, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: T.textDim, fontSize: 'var(--fs-md)', flexDirection: 'column', gap: 8 }}>
         <div style={{ width: 18, height: 18, border: `2px solid ${T.border}`, borderTopColor: T.white, borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
         Loading graph...
       </div>
@@ -67,8 +71,8 @@ export default function InvestigationGraph({ graph, loading, error, onRetry }) {
   if (error) {
     return (
       <div style={{ height: 400, borderRadius: T.radius, border: `1px solid ${T.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-        <p style={{ fontSize: '0.72rem', color: T.textMuted }}>Unable to load investigation graph</p>
-        {onRetry && <button onClick={onRetry} style={{ padding: '5px 14px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: '0.65rem', fontWeight: 600 }}>Retry</button>}
+        <p style={{ fontSize: 'var(--fs-md)', color: T.textMuted }}>Unable to load investigation graph</p>
+        {onRetry && <button onClick={onRetry} style={{ padding: '5px 14px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: 'var(--fs-sm)', fontWeight: 600 }}>Retry</button>}
       </div>
     );
   }
@@ -76,7 +80,7 @@ export default function InvestigationGraph({ graph, loading, error, onRetry }) {
   if (nodes.length === 0) {
     return (
       <div style={{ height: 400, borderRadius: T.radius, border: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ fontSize: '0.72rem', color: T.textFaint, fontStyle: 'italic' }}>No relationship data available for this investigation.</p>
+        <p style={{ fontSize: 'var(--fs-md)', color: T.textFaint, fontStyle: 'italic' }}>No relationship data available for this investigation.</p>
       </div>
     );
   }
