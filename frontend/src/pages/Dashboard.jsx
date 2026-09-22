@@ -7,7 +7,7 @@ import AppShell from '../components/AppShell';
 function Badge({ level, score }) {
   const c = riskColor(level);
   return (
-    <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: '0.56rem', fontWeight: 600, background: `${c}14`, color: c, border: `1px solid ${c}25`, whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
+    <span style={{ padding: '2px 8px', borderRadius: 4, fontSize: 'var(--fs-xs)', fontWeight: 600, background: `${c}14`, color: c, border: `1px solid ${c}25`, whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>
       {level || 'UNKNOWN'}{score != null ? ` (${score})` : ''}
     </span>
   );
@@ -19,8 +19,8 @@ function StatCard({ label, value, color }) {
       onMouseEnter={e => e.currentTarget.style.borderColor = T.borderHover}
       onMouseLeave={e => e.currentTarget.style.borderColor = T.border}
     >
-      <div style={{ fontSize: '0.52rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: '1.3rem', fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 'var(--fs-2xl)', fontWeight: 700, color, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
     </div>
   );
 }
@@ -56,7 +56,7 @@ export default function Dashboard() {
   return (
     <AppShell>
       <header style={{ height: T.topbarHeight, borderBottom: `1px solid ${T.border}`, background: T.bgAlt, padding: '0 28px', display: 'flex', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '0.82rem', fontWeight: 600, color: T.white, margin: 0, letterSpacing: '0.04em' }}>Dashboard</h1>
+        <h1 style={{ fontSize: 'var(--fs-2xl)', fontWeight: 600, color: T.white, margin: 0, letterSpacing: '0.04em' }}>Dashboard</h1>
         <div style={{ flex: 1 }} />
         <button onClick={() => navigate('/investigations/new')} style={btnPrimary}>+ New</button>
       </header>
@@ -73,23 +73,23 @@ export default function Dashboard() {
         {/* List */}
         <div style={card}>
           <div style={{ padding: '12px 16px', borderBottom: `1px solid ${T.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ fontSize: '0.7rem', fontWeight: 600, color: T.white, margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Recent Investigations</h2>
-            <span style={{ fontSize: '0.56rem', color: T.textFaint }}>{total} total</span>
+            <h2 style={{ fontSize: 'var(--fs-md)', fontWeight: 600, color: T.white, margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Recent Investigations</h2>
+            <span style={{ fontSize: 'var(--fs-xs)', color: T.textFaint }}>{total} total</span>
           </div>
 
           {loading ? (
-            <div style={{ padding: 48, textAlign: 'center', color: T.textDim, fontSize: '0.75rem' }}>
+            <div style={{ padding: 48, textAlign: 'center', color: T.textDim, fontSize: 'var(--fs-md)' }}>
               <div style={{ width: 20, height: 20, border: `2px solid ${T.border}`, borderTopColor: T.white, borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 10px' }} />
               Loading investigations...
             </div>
           ) : error ? (
             <div style={{ padding: 32, textAlign: 'center' }}>
-              <p style={{ color: T.textMuted, fontSize: '0.78rem', marginBottom: 12 }}>{error}</p>
+              <p style={{ color: T.textMuted, fontSize: 'var(--fs-md)', marginBottom: 12 }}>{error}</p>
               <button onClick={load} style={btnPrimary}>Retry</button>
             </div>
           ) : items.length === 0 ? (
             <div style={{ padding: 48, textAlign: 'center' }}>
-              <p style={{ color: T.textDim, fontSize: '0.82rem', marginBottom: 12 }}>No investigations yet</p>
+              <p style={{ color: T.textDim, fontSize: 'var(--fs-lg)', marginBottom: 12 }}>No investigations yet</p>
               <button onClick={() => navigate('/investigations/new')} style={btnPrimary}>Upload your first .eml file</button>
             </div>
           ) : (
@@ -104,15 +104,15 @@ export default function Dashboard() {
               >
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: riskColor(inv.risk_level), flexShrink: 0, boxShadow: `0 0 6px ${riskColor(inv.risk_level)}30` }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '0.75rem', color: T.white, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inv.subject || inv.filename || 'Untitled'}</div>
-                  <div style={{ fontSize: '0.58rem', color: T.textDim, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ fontSize: 'var(--fs-md)', color: T.white, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inv.subject || inv.filename || 'Untitled'}</div>
+                  <div style={{ fontSize: 'var(--fs-xs)', color: T.textDim, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                     {inv.sender && <span style={{ maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inv.sender}</span>}
                     {inv.sender && inv.created_at && <span style={{ color: T.textFaint }}>·</span>}
                     {inv.created_at && <span>{new Date(inv.created_at).toLocaleDateString()}</span>}
                   </div>
                 </div>
                 <Badge level={inv.risk_level} score={inv.risk_score} />
-                <span style={{ fontSize: '0.5rem', color: T.textFaint, textTransform: 'uppercase', minWidth: 58, textAlign: 'right', letterSpacing: '0.06em' }}>{inv.status || '—'}</span>
+                <span style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, textTransform: 'uppercase', minWidth: 58, textAlign: 'right', letterSpacing: '0.06em' }}>{inv.status || '—'}</span>
               </div>
             ))
           )}

@@ -9,13 +9,13 @@ function NotFound() {
   const navigate = useNavigate();
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: T.bg, color: T.text }}>
-      <div style={{ fontSize: '3rem', fontWeight: 800, color: T.white, marginBottom: 8 }}>404</div>
-      <p style={{ fontSize: '0.85rem', color: T.textMuted, marginBottom: 20, textAlign: 'center', maxWidth: 400 }}>
+      <div style={{ fontSize: 'var(--fs-hero)', fontWeight: 800, color: T.white, marginBottom: 8 }}>404</div>
+      <p style={{ fontSize: 'var(--fs-md)', color: T.textMuted, marginBottom: 20, textAlign: 'center', maxWidth: 400 }}>
         The page you're looking for doesn't exist.
       </p>
       <button
         onClick={() => navigate('/dashboard')}
-        style={{ padding: '8px 20px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+        style={{ padding: '8px 20px', borderRadius: T.radius, background: T.white, color: T.bg, border: 'none', cursor: 'pointer', fontSize: 'var(--fs-md)', fontWeight: 600 }}
       >
         Back to Dashboard
       </button>

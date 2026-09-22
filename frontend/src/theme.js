@@ -56,7 +56,7 @@ export const card = {
 };
 
 export const sectionHead = {
-  fontSize: '0.6rem',
+  fontSize: 'var(--fs-sm)',
   fontWeight: 600,
   color: T.textDim,
   textTransform: 'uppercase',
@@ -77,7 +77,7 @@ export const btnPrimary = {
   background: T.white,
   color: T.bg,
   border: 'none',
-  fontSize: '0.7rem',
+  fontSize: 'var(--fs-md)',
   fontWeight: 600,
   cursor: 'pointer',
   letterSpacing: '0.03em',
@@ -90,7 +90,7 @@ export const btnSecondary = {
   background: 'transparent',
   color: T.textMuted,
   border: `1px solid ${T.border}`,
-  fontSize: '0.7rem',
+  fontSize: 'var(--fs-md)',
   fontWeight: 500,
   cursor: 'pointer',
   transition: 'all 0.15s ease',

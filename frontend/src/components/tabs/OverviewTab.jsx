@@ -5,17 +5,17 @@ import { SectionBlock } from '../Explanation';
 function StatMini({ label, value, color }) {
   return (
     <div style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: '1.4rem', fontWeight: 700, color: color || T.white, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
-      <div style={{ fontSize: '0.5rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>{label}</div>
+      <div style={{ fontSize: 'var(--fs-2xl)', fontWeight: 700, color: color || T.white, fontVariantNumeric: 'tabular-nums' }}>{value}</div>
+      <div style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: 2 }}>{label}</div>
     </div>
   );
 }
 
 function SummaryItem({ label, value, color }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid ${T.border}` }}>
-      <span style={{ fontSize: '0.64rem', color: T.textDim }}>{label}</span>
-      <span style={{ fontSize: '0.64rem', color: color || T.textMuted, fontWeight: 500 }}>{value || '—'}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, minWidth: 0, padding: '6px 0', borderBottom: `1px solid ${T.border}` }}>
+      <span style={{ fontSize: 'var(--fs-sm)', color: T.textDim, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 'var(--fs-sm)', color: color || T.textMuted, fontWeight: 500, minWidth: 0, wordBreak: 'break-all', textAlign: 'right' }}>{value || '—'}</span>
     </div>
   );
 }
@@ -58,14 +58,14 @@ export default function OverviewTab({ data }) {
         <div style={{
           width: 56, height: 56, borderRadius: T.radiusLg, background: T.bgPanel,
           border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: '1.4rem', fontWeight: 800, color: rc, flexShrink: 0,
+          fontSize: 'var(--fs-2xl)', fontWeight: 800, color: rc, flexShrink: 0,
           fontVariantNumeric: 'tabular-nums',
         }}>{data.risk_score ?? 0}</div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: rc, letterSpacing: '0.03em' }}>
+          <div style={{ fontSize: 'var(--fs-xl)', fontWeight: 700, color: rc, letterSpacing: '0.03em' }}>
             {(data.risk_level || 'UNKNOWN').toUpperCase()} RISK
           </div>
-          <div style={{ fontSize: '0.62rem', color: T.textDim, marginTop: 3 }}>
+          <div style={{ fontSize: 'var(--fs-sm)', color: T.textDim, marginTop: 3 }}>
             Classification: {data.classification || ai.classification || 'Unknown'}
             {data.ai_confidence != null && ` · ${(data.ai_confidence * 100).toFixed(0)}% confidence`}
           </div>
@@ -74,7 +74,7 @@ export default function OverviewTab({ data }) {
 
       {/* Summary explanation */}
       <div style={{ padding: '12px 16px', borderRadius: T.radius, background: T.bgPanel, border: `1px solid ${T.border}`, marginBottom: 20 }}>
-        <p style={{ fontSize: '0.68rem', color: T.textMuted, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontSize: 'var(--fs-md)', color: T.textMuted, lineHeight: 1.6, margin: 0 }}>
           {warnings.length > 0
             ? <>This investigation identified {warnings.length} notable finding{warnings.length > 1 ? 's' : ''}:</>
             : 'No significant threats were identified during this investigation.'
@@ -82,14 +82,14 @@ export default function OverviewTab({ data }) {
         </p>
         {warnings.length > 0 && (
           <ul style={{ margin: '6px 0 0 0', padding: '0 0 0 16px' }}>
-            {warnings.map((w, i) => <li key={i} style={{ fontSize: '0.64rem', color: T.textDim, lineHeight: 1.6 }}>{w}</li>)}
+            {warnings.map((w, i) => <li key={i} style={{ fontSize: 'var(--fs-sm)', color: T.textDim, lineHeight: 1.6 }}>{w}</li>)}
           </ul>
         )}
       </div>
 
       {/* Key Metrics */}
       <SectionBlock title="Key Metrics">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, padding: '16px 0' }}>
+        <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, padding: '16px 0' }}>
           <StatMini label="Risk Score" value={data.risk_score ?? 0} color={rc} />
           <StatMini label="IOCs" value={iocs.length} color={iocs.length > 0 ? T.white : T.textFaint} />
           <StatMini label="Threat Hits" value={ti.length} color={malTi > 0 ? T.danger : ti.length > 0 ? T.warning : T.textFaint} />
@@ -100,7 +100,7 @@ export default function OverviewTab({ data }) {
 
       {/* Quick Summary */}
       <SectionBlock title="Investigation Summary">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+        <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 32px' }}>
           <div>
             <SummaryItem label="Subject" value={data.subject || meta.subject} />
             <SummaryItem label="Sender" value={data.sender || meta.from_address} />
@@ -118,7 +118,7 @@ export default function OverviewTab({ data }) {
       {data.risk_score_detail && (
         <SectionBlock title="Risk Score Breakdown">
           <div style={{ padding: '12px 16px', borderRadius: T.radius, background: T.bgPanel, border: `1px solid ${T.border}` }}>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 10, fontSize: '0.62rem', color: T.textDim, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 10, fontSize: 'var(--fs-sm)', color: T.textDim, flexWrap: 'wrap' }}>
               <span>Deterministic: <strong style={{ color: T.text }}>{data.risk_score_detail.deterministic_score ?? '—'}</strong></span>
               <span style={{ color: T.textFaint }}>·</span>
               <span>Social Engineering AI: <strong style={{ color: T.text }}>+{data.risk_score_detail.ai_social_engineering_score ?? 0}</strong></span>
@@ -127,13 +127,13 @@ export default function OverviewTab({ data }) {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <InfoTip text="The risk score combines automated security checks and AI analysis to produce a single number. Higher scores indicate more risk factors were found." />
-              <span style={{ fontSize: '0.56rem', color: T.textFaint }}>What is a risk score?</span>
+              <span style={{ fontSize: 'var(--fs-xs)', color: T.textFaint }}>What is a risk score?</span>
             </div>
             {(data.risk_score_detail.signals || []).map((s, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: T.radiusSm, background: T.surface, fontSize: '0.63rem', marginBottom: 3 }}>
-                <span style={{ fontWeight: 700, color: T.white, minWidth: 26, fontSize: '0.58rem', fontVariantNumeric: 'tabular-nums' }}>+{s.weight}</span>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 8px', borderRadius: T.radiusSm, background: T.surface, fontSize: 'var(--fs-sm)', marginBottom: 3 }}>
+                <span style={{ fontWeight: 700, color: T.white, minWidth: 26, fontSize: 'var(--fs-xs)', fontVariantNumeric: 'tabular-nums' }}>+{s.weight}</span>
                 <span style={{ color: T.textMuted, flex: 1 }}>{s.name}</span>
-                {s.evidence && <span style={{ color: T.textFaint, fontSize: '0.53rem', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.evidence}</span>}
+                {s.evidence && <span style={{ color: T.textFaint, fontSize: 'var(--fs-micro)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.evidence}</span>}
               </div>
             ))}
           </div>

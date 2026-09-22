@@ -11,7 +11,7 @@ export default function ReportTab({ data }) {
     <div style={{ animation: 'fadeIn 0.2s ease' }}>
       {/* Intro */}
       <div style={{ padding: '12px 16px', borderRadius: T.radius, background: T.bgPanel, border: `1px solid ${T.border}`, marginBottom: 20 }}>
-        <p style={{ fontSize: '0.68rem', color: T.textMuted, lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontSize: 'var(--fs-md)', color: T.textMuted, lineHeight: 1.6, margin: 0 }}>
           <strong>Investigation Report</strong> brings together all findings from this investigation into a format that can be reviewed, shared, or archived.
         </p>
       </div>
@@ -19,8 +19,8 @@ export default function ReportTab({ data }) {
       {/* Report card */}
       <div style={{ padding: '24px 28px', borderRadius: T.radius, background: T.surface, border: `1px solid ${T.border}`, textAlign: 'center' }}>
         <div style={{ fontSize: '2rem', marginBottom: 12 }}>📄</div>
-        <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: T.white, margin: '0 0 8px 0' }}>PDF Investigation Report</h3>
-        <p style={{ fontSize: '0.68rem', color: T.textDim, lineHeight: 1.5, marginBottom: 20, maxWidth: 400, margin: '0 auto 20px auto' }}>
+        <h3 style={{ fontSize: 'var(--fs-xl)', fontWeight: 700, color: T.white, margin: '0 0 8px 0' }}>PDF Investigation Report</h3>
+        <p style={{ fontSize: 'var(--fs-md)', color: T.textDim, lineHeight: 1.5, marginBottom: 20, maxWidth: 400, margin: '0 auto 20px auto' }}>
           This report includes authentication results, indicators of compromise, threat intelligence findings,
           and AI analysis — formatted for review and sharing.
         </p>
@@ -32,7 +32,7 @@ export default function ReportTab({ data }) {
             display: 'inline-flex', alignItems: 'center', gap: 8,
             padding: '10px 24px', borderRadius: T.radius,
             background: T.white, color: T.bg, border: 'none',
-            fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+            fontSize: 'var(--fs-md)', fontWeight: 600, cursor: 'pointer',
             textDecoration: 'none', letterSpacing: '0.03em',
             transition: 'all 0.15s ease',
           }}
@@ -45,7 +45,7 @@ export default function ReportTab({ data }) {
 
       {/* What's included */}
       <SectionBlock title="What's Included" description="The report combines all investigation findings into a single document.">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {[
             'Email metadata and headers',
             'SPF, DKIM, DMARC results',
@@ -59,7 +59,7 @@ export default function ReportTab({ data }) {
             <div key={i} style={{
               padding: '8px 12px', borderRadius: T.radiusSm,
               background: T.surface, border: `1px solid ${T.border}`,
-              fontSize: '0.62rem', color: T.textMuted, display: 'flex', alignItems: 'center', gap: 6,
+              fontSize: 'var(--fs-sm)', color: T.textMuted, display: 'flex', alignItems: 'center', gap: 6,
             }}>
               <span style={{ color: T.textFaint }}>✓</span> {item}
             </div>

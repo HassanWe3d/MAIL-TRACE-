@@ -24,10 +24,10 @@ export default function Explanation({ title, explanation, result, resultColor, r
     }}>
       {/* Title + result row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: T.white, letterSpacing: '0.02em' }}>{title}</span>
+        <span style={{ fontSize: 'var(--fs-lg)', fontWeight: 700, color: T.white, letterSpacing: '0.02em' }}>{title}</span>
         {resultLabel && (
           <span style={{
-            fontSize: '0.53rem', padding: '2px 8px', borderRadius: 4, fontWeight: 600,
+            fontSize: 'var(--fs-micro)', padding: '2px 8px', borderRadius: 4, fontWeight: 600,
             background: `${resultColor}14`, color: resultColor,
             border: `1px solid ${resultColor}25`, textTransform: 'uppercase', letterSpacing: '0.04em',
           }}>{resultLabel}</span>
@@ -36,22 +36,22 @@ export default function Explanation({ title, explanation, result, resultColor, r
 
       {/* What is it? */}
       {explanation && (
-        <p style={{ fontSize: '0.64rem', color: T.textDim, lineHeight: 1.55, marginBottom: 8 }}>{explanation}</p>
+        <p style={{ fontSize: 'var(--fs-sm)', color: T.textDim, lineHeight: 1.55, marginBottom: 8 }}>{explanation}</p>
       )}
 
       {/* What did we find? */}
       {result && (
         <div style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: '0.53rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>What did we find</div>
-          <div style={{ fontSize: '0.68rem', color: T.textMuted, lineHeight: 1.5 }}>{result}</div>
+          <div style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>What did we find</div>
+          <div style={{ fontSize: 'var(--fs-md)', color: T.textMuted, lineHeight: 1.5 }}>{result}</div>
         </div>
       )}
 
       {/* Why does it matter? */}
       {whyMatters && (
         <div>
-          <div style={{ fontSize: '0.53rem', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>Why this matters</div>
-          <p style={{ fontSize: '0.64rem', color: T.textDim, lineHeight: 1.55, margin: 0 }}>{whyMatters}</p>
+          <div style={{ fontSize: 'var(--fs-micro)', color: T.textFaint, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: 4 }}>Why this matters</div>
+          <p style={{ fontSize: 'var(--fs-sm)', color: T.textDim, lineHeight: 1.55, margin: 0 }}>{whyMatters}</p>
         </div>
       )}
 
@@ -61,7 +61,7 @@ export default function Explanation({ title, explanation, result, resultColor, r
           <button
             onClick={() => setExpanded(v => !v)}
             style={{
-              fontSize: '0.58rem', color: T.textFaint, background: 'none', border: 'none',
+              fontSize: 'var(--fs-xs)', color: T.textFaint, background: 'none', border: 'none',
               cursor: 'pointer', padding: '4px 0', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 4,
               fontFamily: 'inherit',
             }}
@@ -73,7 +73,7 @@ export default function Explanation({ title, explanation, result, resultColor, r
             <div style={{
               marginTop: 6, padding: '10px 12px', borderRadius: T.radiusSm,
               background: T.bgPanel, border: `1px solid ${T.border}`,
-              fontSize: '0.6rem', color: T.textDim, lineHeight: 1.5,
+              fontSize: 'var(--fs-sm)', color: T.textDim, lineHeight: 1.5,
               fontFamily: '"SF Mono", ui-monospace, monospace',
               wordBreak: 'break-all', whiteSpace: 'pre-wrap', maxHeight: 200, overflow: 'auto',
             }}>
@@ -93,12 +93,12 @@ export function SectionBlock({ title, description, count, children }) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-        <h3 style={{ fontSize: '0.7rem', fontWeight: 600, color: T.white, margin: 0, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{title}</h3>
+        <h3 style={{ fontSize: 'var(--fs-md)', fontWeight: 600, color: T.white, margin: 0, letterSpacing: '0.06em', textTransform: 'uppercase' }}>{title}</h3>
         {count != null && (
-          <span style={{ fontSize: '0.5rem', fontWeight: 600, color: T.textFaint, background: T.surfaceActive, padding: '1px 6px', borderRadius: 4, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
+          <span style={{ fontSize: 'var(--fs-micro)', fontWeight: 600, color: T.textFaint, background: T.surfaceActive, padding: '2px 7px', borderRadius: 4, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
         )}
       </div>
-      {description && <p style={{ fontSize: '0.62rem', color: T.textDim, lineHeight: 1.5, marginBottom: 12, maxWidth: 600 }}>{description}</p>}
+      {description && <p style={{ fontSize: 'var(--fs-sm)', color: T.textDim, lineHeight: 1.5, marginBottom: 12, maxWidth: 600 }}>{description}</p>}
       {children}
     </div>
   );
